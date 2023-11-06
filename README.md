@@ -16,5 +16,5 @@ to create a visualization for the examination to assist the diagnosis and increa
 
 References:\
 [1]	H. Layard Horsfall et al., ‘A Sensorised Surgical Glove to Analyze Forces During Neurosurgery’, Neurosurgery, vol. 92, no. 3, p. 639, 2023, doi: 10.1227/neu.0000000000002239. \
-[2]	‘Prostate cancer statistics | World Cancer Research Fund International’, WCRF International. [Online]. Available: https://www.wcrf.org/cancer-trends/prostate-cancer-statistics/ \
+[2]	‘Prostate cancer statistics | World Cancer Research Fund International’, WCRF International. [Online]. Available: https://www.wcrf.org/cancer-trends/prostate-cancer-statistics/ 
 
