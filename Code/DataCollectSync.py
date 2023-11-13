@@ -1,7 +1,7 @@
 import serial
 import math
 from sksurgerynditracker.nditracker import NDITracker
-a test 
+
 #---------------------------------Setup---------------------------------------------------------------------------------------------------------
 # set up serial connection to Arduino
 sPort_Arduino = serial.Serial('COM6', 9600)  # replace with the correct port and baud rate
