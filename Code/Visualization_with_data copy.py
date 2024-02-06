@@ -32,6 +32,7 @@ prostate_red_RT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostat
 prostate_red_RB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RB_red.obj'))
 prostate_red_LT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LT_red.obj'))
 prostate_red_LB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LB_red.obj'))
+
 # plane obj
 plane_obj = Wavefront(os.path.join(root_path, 'Object/hand/plane.obj'))
 # dataframe
