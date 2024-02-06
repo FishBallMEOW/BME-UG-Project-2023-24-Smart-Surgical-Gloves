@@ -19,21 +19,22 @@ import sys  # We need sys so that we can pass argv to QApplication
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
 
 root_path = os.path.dirname(__file__)
+print(root_path)
 data_file = 'data\data_plastic_hand.csv'  # change to desire data (.csv) file name
 # hand obj
-hand_obj = Wavefront(os.path.join(root_path, 'hand/right_hand.obj'))
-hand_red_obj = Wavefront(os.path.join(root_path, 'hand/hand_red.obj'))
-hand_orange_obj = Wavefront(os.path.join(root_path, 'hand/hand_orange.obj'))
-hand_yellow_obj = Wavefront(os.path.join(root_path, 'hand/hand_yellow.obj'))
-hand_green_obj = Wavefront(os.path.join(root_path, 'hand/hand_green.obj'))
+hand_obj = Wavefront(os.path.join(root_path, 'Object/hand/right_hand.obj'))
+hand_red_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_red.obj'))
+hand_orange_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_orange.obj'))
+hand_yellow_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_yellow.obj'))
+hand_green_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_green.obj'))
 # prostate obj
-prostate_obj = Wavefront(os.path.join(root_path, 'prostate/prostate_realistic.obj'))
-prostate_red_RT_obj = Wavefront(os.path.join(root_path, 'prostate/prostate_realistic_cut_RT_red.obj'))
-prostate_red_RB_obj = Wavefront(os.path.join(root_path, 'prostate/prostate_realistic_cut_RB_red.obj'))
-prostate_red_LT_obj = Wavefront(os.path.join(root_path, 'prostate/prostate_realistic_cut_LT_red.obj'))
-prostate_red_LB_obj = Wavefront(os.path.join(root_path, 'prostate/prostate_realistic_cut_LB_red.obj'))
+prostate_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic.obj'))
+prostate_red_RT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RT_red.obj'))
+prostate_red_RB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RB_red.obj'))
+prostate_red_LT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LT_red.obj'))
+prostate_red_LB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LB_red.obj'))
 # plane obj
-plane_obj = Wavefront(os.path.join(root_path, 'hand/plane.obj'))
+plane_obj = Wavefront(os.path.join(root_path, 'Object/hand/plane.obj'))
 # dataframe
 df_data = pd.read_csv(os.path.join(root_path, data_file))
 
