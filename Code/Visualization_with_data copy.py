@@ -32,7 +32,19 @@ prostate_red_RT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostat
 prostate_red_RB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RB_red.obj'))
 prostate_red_LT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LT_red.obj'))
 prostate_red_LB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LB_red.obj'))
-
+# prostate obj more cut 
+prostate_red_1_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_1.obj'))
+prostate_red_2_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_2.obj'))
+prostate_red_3_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_3.obj'))
+prostate_red_4_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_4.obj'))
+prostate_red_5_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_5.obj'))
+prostate_red_6_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_6.obj'))
+prostate_red_7_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_7.obj'))
+prostate_red_8_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_8.obj'))
+prostate_red_9_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_9.obj'))
+prostate_red_10_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_10.obj'))
+prostate_red_11_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_11.obj'))
+prostate_red_12_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_12.obj'))
 # plane obj
 plane_obj = Wavefront(os.path.join(root_path, 'Object/hand/plane.obj'))
 # dataframe
@@ -235,11 +247,60 @@ def on_draw():
     glLoadIdentity()
     glLightfv(GL_LIGHT0, GL_POSITION, lightfv(-1.0, 1.0, 1.0, 0.0))
     draw_object(plane_obj, 0, -2, -5, 0, 0, 0)
-    #draw_object(prostate_red_RB_obj, 0, 0, -1, 0, 0, 0)
+    # draw_object(prostate_red_7_obj, 0, 0, -5, 0, 0, 0)
     draw_object(hand_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
 
-    """if pressure >= 2.0:
+    # Split more prostate
+    if pressure >= 2.0:
         print(x2-x1, y2-y1)
+        if y2-y1>0.5 and y2-y1<=1.5:
+            if x2-x1>=-2 and x2-x1<=-1:
+                draw_object(prostate_red_1_obj, x1, y1, z1, 0, 0, 0)
+                print('1')
+            elif x2-x1>-1 and x2-x1<=0:
+                draw_object(prostate_red_2_obj, x1, y1, z1, 0, 0, 0)
+                print('2')
+            elif x2-x1>0 and x2-x1<=1:
+                draw_object(prostate_red_3_obj, x1, y1, z1, 0, 0, 0)
+                print('3')
+            elif x2-x1>0 and x2-x1<=2:
+                draw_object(prostate_red_4_obj, x1, y1, z1, 0, 0, 0)
+                print('4')
+        elif y2-y1>-0.5 and y2-y1<=0.5:
+            if x2-x1>=-2 and x2-x1<=-1:
+                draw_object(prostate_red_5_obj, x1, y1, z1, 0, 0, 0)
+                print('5')
+            elif x2-x1>-1 and x2-x1<=0:
+                draw_object(prostate_red_6_obj, x1, y1, z1, 0, 0, 0)
+                print('6')
+            elif x2-x1>0 and x2-x1<=1:
+                draw_object(prostate_red_7_obj, x1, y1, z1, 0, 0, 0)
+                print('7')
+            elif x2-x1>0 and x2-x1<=2:
+                draw_object(prostate_red_8_obj, x1, y1, z1, 0, 0, 0)
+                print('8')
+        elif y2-y1>-1.5 and y2-y1<=-0.5:
+            if x2-x1>=-2 and x2-x1<=-1:
+                draw_object(prostate_red_9_obj, x1, y1, z1, 0, 0, 0)
+                print('9')
+            elif x2-x1>-1 and x2-x1<=0:
+                draw_object(prostate_red_10_obj, x1, y1, z1, 0, 0, 0)
+                print('10')
+            elif x2-x1>0 and x2-x1<=1:
+                draw_object(prostate_red_11_obj, x1, y1, z1, 0, 0, 0)
+                print('11')
+            elif x2-x1>0 and x2-x1<=2:
+                draw_object(prostate_red_12_obj, x1, y1, z1, 0, 0, 0)
+                print('12')
+        else:
+            draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
+    else:
+        draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
+
+
+    """# Split prostate
+    if pressure >= 2.0:
+
         if x2-x1>=0 and y2-y1>=0:
             draw_object(prostate_red_RT_obj, x1, y1, z1, 0, 0, 0)
         elif x2-x1>=0 and y2-y1<=0:
@@ -251,7 +312,9 @@ def on_draw():
     else:
         draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)"""
 
-"""    if pressure >= 0.2 and pressure < 0.5:
+    """
+    # No split prostate
+    if pressure >= 0.2 and pressure < 0.5:
         # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
         draw_object(hand_green_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
     elif pressure >= 0.5 and pressure < 1.0:
