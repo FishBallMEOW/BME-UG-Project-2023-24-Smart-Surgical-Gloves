@@ -19,7 +19,6 @@ import sys  # We need sys so that we can pass argv to QApplication
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
 
 root_path = os.path.dirname(__file__)
-print(root_path)
 data_file = 'data\data_plastic_hand.csv'  # change to desire data (.csv) file name
 # hand obj
 hand_obj = Wavefront(os.path.join(root_path, 'Object/hand/right_hand.obj'))
@@ -235,7 +234,7 @@ def on_draw():
     glLoadIdentity()
     glLightfv(GL_LIGHT0, GL_POSITION, lightfv(-1.0, 1.0, 1.0, 0.0))
     draw_object(plane_obj, 0, -2, -5, 0, 0, 0)
-    draw_object(prostate_red_RB_obj, 0, 0, -1, 0, 0, 0)
+    #draw_object(prostate_red_RB_obj, 0, 0, -1, 0, 0, 0)
     draw_object(hand_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
 
     """if pressure >= 2.0:

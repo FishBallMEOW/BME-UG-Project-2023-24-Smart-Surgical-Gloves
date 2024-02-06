@@ -20,13 +20,20 @@ import sys  # We need sys so that we can pass argv to QApplication
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
 
 root_path = os.path.dirname(__file__)
-hand_obj = Wavefront(os.path.join(root_path, 'hand/hand.obj'))
-hand_red_obj = Wavefront(os.path.join(root_path, 'hand/hand_red.obj'))
-hand_orange_obj = Wavefront(os.path.join(root_path, 'hand/hand_orange.obj'))
-hand_yellow_obj = Wavefront(os.path.join(root_path, 'hand/hand_yellow.obj'))
-hand_green_obj = Wavefront(os.path.join(root_path, 'hand/hand_green.obj'))
-prostate_obj = Wavefront(os.path.join(root_path, 'hand/prostate_realistic.obj'))
-plane_obj = Wavefront(os.path.join(root_path, 'hand/plane.obj'))
+# hand obj
+hand_obj = Wavefront(os.path.join(root_path, 'Object/hand/right_hand.obj'))
+hand_red_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_red.obj'))
+hand_orange_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_orange.obj'))
+hand_yellow_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_yellow.obj'))
+hand_green_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_green.obj'))
+# prostate obj
+prostate_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic.obj'))
+prostate_red_RT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RT_red.obj'))
+prostate_red_RB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RB_red.obj'))
+prostate_red_LT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LT_red.obj'))
+prostate_red_LB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LB_red.obj'))
+# plane obj
+plane_obj = Wavefront(os.path.join(root_path, 'Object/hand/plane.obj'))
 
 #---------------------------------Setup---------------------------------------------------------------------------------------------------------
 # set up serial connection to Arduino
@@ -152,6 +159,13 @@ def q2e(qw, qx, qy, qz):
 
     return X, Y, Z
 
+
+def aurora2opengl(x,y,z):
+    x = x/300*2
+    y = (y/300-1)*2*float(viewport_height)/viewport_width
+    z = (-z-210)/420*10
+    return [x,y,z]
+
 def draw_object(obj, x, y, z, rot_x, rot_y, rot_z):
     glPushMatrix
     glLoadIdentity()
@@ -179,12 +193,8 @@ def update(dt):
     [z1, x1, y1] = dataLocation[0][0][0][0][4:7]/40
     [z2, x2, y2] = dataLocation[0][0][1][0][4:7]/40
     
-    x1 = -x1 + x_offset
-    x2 = -x2 + x_offset
-    y1 = -y1 + y_offset
-    z1 = z1 + z_offset
-    y2 = -y2 + y_offset
-    z2 = z2 + z_offset
+    [x1, y1, z1] = aurora2opengl(x1, y1, z1)
+    [x2, y2, z2] = aurora2opengl(x2, y2, z2)
 
     rot_z1, rot_x1, rot_y1  = q2e(dataLocation[0][0][0][0][0],dataLocation[0][0][0][0][1],dataLocation[0][0][0][0][2],dataLocation[0][0][0][0][3])
     rot_z2, rot_x2, rot_y2  = q2e(dataLocation[0][0][1][0][0],dataLocation[0][0][1][0][1],dataLocation[0][0][1][0][2],dataLocation[0][0][1][0][3])  # transformed the coordinate system (aurora: x,y,z --> opengl: z, x, y)
@@ -233,8 +243,7 @@ def on_draw():
     window.clear()
     glLoadIdentity()
     glLightfv(GL_LIGHT0, GL_POSITION, lightfv(-1.0, 1.0, 1.0, 0.0))
-    draw_object(plane_obj, 0+x_offset, 0+y_offset, 0+z_offset, 0, 0, 0)
-    #draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
+    draw_object(plane_obj, 0, -2, -5, 0, 0, 0)    #draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
     #draw_object()
     if pressure >= 0.2 and pressure < 0.5:
         # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
