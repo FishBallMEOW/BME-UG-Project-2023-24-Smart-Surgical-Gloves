@@ -78,9 +78,7 @@ trigger = False
 stress = []
 strain = []
 time_pressure = []
-x_offset = 0
-y_offset = -3
-z_offset = -8 
+
 
 #---------------------------------Functions&Classes-----------------------------------------------------------------------------------------------
 # Setting the Thread function with returns
@@ -166,6 +164,12 @@ def q2e(qw, qx, qy, qz):
 
     return X, Y, Z
 
+def aurora2opengl(x,y,z):
+    x = x/300*2
+    y = (y/300-1)*2*float(viewport_height)/viewport_width
+    z = (-z-210)/420*10
+    return [x,y,z]
+
 def distance_ori(x1, y1, z1, x2, y2, z2):
     # calculate distance after force is applied
     return math.sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
@@ -202,18 +206,8 @@ def update(dt):
     [qw1, rot_z1, rot_x1, rot_y1, z1, x1, y1] = dataLocation[0][0]  # aurora (x,y,z) --> opengl (z, x, y)
     [qw2, rot_z2, rot_x2, rot_y2, z2, x2, y2] = dataLocation[1][0]
 
-    [z1, x1, y1, z2, x2, y2] = np.array([z1, x1, y1, z2, x2, y2])/40
-
-    x_offset = 0
-    y_offset = -3
-    z_offset = -8 
-
-    x1 = -x1 + x_offset
-    x2 = -x2 + x_offset
-    y1 = -y1 + y_offset
-    z1 = z1 + z_offset
-    y2 = -y2 + y_offset
-    z2 = z2 + z_offset
+    [x1, y1, z1] = aurora2opengl(x1, y1, z1)
+    [x2, y2, z2] = aurora2opengl(x2, y2, z2)
 
     rot_x1, rot_y1, rot_z1 = q2e(qw1, rot_x1, rot_y1, rot_z1)
     rot_x2, rot_y2, rot_z2 = q2e(qw2, rot_x2, rot_y2, rot_z2)
@@ -240,11 +234,11 @@ def on_draw():
     window.clear()
     glLoadIdentity()
     glLightfv(GL_LIGHT0, GL_POSITION, lightfv(-1.0, 1.0, 1.0, 0.0))
-    draw_object(plane_obj, 0+x_offset, 0+y_offset, 0+z_offset, 0, 0, 0)
-    # draw_object(prostate_red_RB_obj, x1, y1, z1, 0, 0, 0)
+    draw_object(plane_obj, 0, -2, -5, 0, 0, 0)
+    draw_object(prostate_red_RB_obj, 0, 0, -1, 0, 0, 0)
     draw_object(hand_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
 
-    if pressure >= 2.0:
+    """if pressure >= 2.0:
         print(x2-x1, y2-y1)
         if x2-x1>=0 and y2-y1>=0:
             draw_object(prostate_red_RT_obj, x1, y1, z1, 0, 0, 0)
@@ -255,7 +249,7 @@ def on_draw():
         else: 
             draw_object(prostate_red_LB_obj, x1, y1, z1, 0, 0, 0)
     else:
-        draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
+        draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)"""
 
 """    if pressure >= 0.2 and pressure < 0.5:
         # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
@@ -281,7 +275,7 @@ def on_resize(width, height):
     glViewport(0, 0, viewport_width, viewport_height)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    glFrustum(-2, 2, -2*float(viewport_height)/viewport_width, 2*float(viewport_height)/viewport_width, 1., 100.)
+    glFrustum(-2, 2, -2*float(viewport_height)/viewport_width, 2*float(viewport_height)/viewport_width, 1., 10.)
     glMatrixMode(GL_MODELVIEW)
     return True
 
