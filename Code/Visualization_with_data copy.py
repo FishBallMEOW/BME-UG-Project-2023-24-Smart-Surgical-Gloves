@@ -13,13 +13,13 @@ from PyQt6 import QtWidgets, QtCore
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
 import sys  # We need sys so that we can pass argv to QApplication
-
+from pyglet.window import key, mouse
 
 
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
 
 root_path = os.path.dirname(__file__)
-data_file = 'data_20_feb_2024\data_0050_same_pos.csv'  # change to desire data (.csv) file name
+data_file = 'data/20_feb_2024/data_20_feb_2024/data_0030_diff_pos.csv'  # change to desire data (.csv) file name
 # hand obj
 hand_obj = Wavefront(os.path.join(root_path, 'Object/hand/right_hand.obj'))
 hand_red_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_red.obj'))
@@ -33,18 +33,18 @@ prostate_red_RB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostat
 prostate_red_LT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LT_red.obj'))
 prostate_red_LB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LB_red.obj'))
 # prostate obj more cut 
-prostate_red_1_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_1.obj'))
-prostate_red_2_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_2.obj'))
-prostate_red_3_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_3.obj'))
-prostate_red_4_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_4.obj'))
-prostate_red_5_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_5.obj'))
-prostate_red_6_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_6.obj'))
-prostate_red_7_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_7.obj'))
-prostate_red_8_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_8.obj'))
-prostate_red_9_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_9.obj'))
-prostate_red_10_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_10.obj'))
-prostate_red_11_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_11.obj'))
-prostate_red_12_obj = Wavefront(os.path.join(root_path, 'Object\prostate\More Cut\prostate_realistic_more_cut_12.obj'))
+# prostate_red_1_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_1.obj'))
+# prostate_red_2_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_2.obj'))
+# prostate_red_3_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_3.obj'))
+# prostate_red_4_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_4.obj'))
+# prostate_red_5_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_5.obj'))
+# prostate_red_6_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_6.obj'))
+# prostate_red_7_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_7.obj'))
+# prostate_red_8_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_8.obj'))
+# prostate_red_9_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_9.obj'))
+# prostate_red_10_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_10.obj'))
+# prostate_red_11_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_11.obj'))
+# prostate_red_12_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_12.obj'))
 # plane obj
 plane_obj = Wavefront(os.path.join(root_path, 'Object/hand/plane.obj'))
 # dataframe
@@ -90,8 +90,9 @@ trigger = False
 stress = []
 strain = []
 time_pressure = []
-
-
+zoom = 2
+rot_cam = (0, 0)
+cam_pos = (0, 0, 0)
 #---------------------------------Functions&Classes-----------------------------------------------------------------------------------------------
 # Setting the Thread function with returns
 class ThreadWithReturnValue(Thread):
@@ -188,14 +189,25 @@ def distance_ori(x1, y1, z1, x2, y2, z2):
 
 
 def draw_object(obj, x, y, z, rot_x, rot_y, rot_z):
+    global rot_cam, cam_pos
+    
     glLoadIdentity()
     glPushMatrix()
+
+    rot_cam_x, rot_cam_y = rot_cam
+    cam_x, cam_y, cam_z = cam_pos
+    print("1", rot_cam)
+    glRotatef(rot_cam_x, 0, 1, 0)
+    glRotatef(-rot_cam_y, math.cos(math.radians(rot_cam_x)), 0, math.sin(math.radians(rot_cam_x)))
+    glTranslated(cam_x, cam_y, cam_z)
+
     glTranslated(x, y, z)
-    glRotatef(rot_x, -1.0, 0.0, 0.0)
-    glRotatef(rot_y, 0.0, -1.0, 0.0)
+    glRotatef(rot_x, -1.0, 0.0, 0.0)  # negative because of the conversion of the coordinates
+    glRotatef(rot_y, 0.0, -1.0, 0.0)  # same as x
     glRotatef(rot_z, 0.0, 0.0, 1.0)
     visualization.draw(obj)
     glPopMatrix()
+
 
 def update(dt):
     global x1, y1, z1, rot_x1, rot_y1, rot_z1, x2, y2, z2, rot_x2, rot_y2, rot_z2, t, pressure, trigger, x_i, y_i, z_i, stress, strain
@@ -251,54 +263,54 @@ def on_draw():
     draw_object(hand_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
 
     # Split more prostate
-    if pressure >= 2.0:
-        print(x2-(x1-25/300*2), -z2+z1)
-        if -z2+z1>0.5 and -z2+z1<=1.5:
-            if x2-(x1-25/300*2)>=-2 and x2-(x1-25/300*2)<=-1:
-                draw_object(prostate_red_1_obj, x1, y1, z1, 0, 0, 0)
-                print('1')
-            elif x2-(x1-25/300*2)>-1 and x2-(x1-25/300*2)<=0:
-                draw_object(prostate_red_2_obj, x1, y1, z1, 0, 0, 0)
-                print('2')
-            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=1:
-                draw_object(prostate_red_3_obj, x1, y1, z1, 0, 0, 0)
-                print('3')
-            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=2:
-                draw_object(prostate_red_4_obj, x1, y1, z1, 0, 0, 0)
-                print('4')
-        elif -z2+z1>-0.5 and -z2+z1<=0.5:
-            if x2-(x1-25/300*2)>=-2 and x2-(x1-25/300*2)<=-1:
-                draw_object(prostate_red_5_obj, x1, y1, z1, 0, 0, 0)
-                print('5')
-            elif x2-(x1-25/300*2)>-1 and x2-(x1-25/300*2)<=0:
-                draw_object(prostate_red_6_obj, x1, y1, z1, 0, 0, 0)
-                print('6')
-            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=1:
-                draw_object(prostate_red_7_obj, x1, y1, z1, 0, 0, 0)
-                print('7')
-            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=2:
-                draw_object(prostate_red_8_obj, x1, y1, z1, 0, 0, 0)
-                print('8')
-        elif -z2+z1>-1.5 and -z2+z1<=-0.5:
-            if x2-(x1-25/300*2)>=-2 and x2-(x1-25/300*2)<=-1:
-                draw_object(prostate_red_9_obj, x1, y1, z1, 0, 0, 0)
-                print('9')
-            elif x2-(x1-25/300*2)>-1 and x2-(x1-25/300*2)<=0:
-                draw_object(prostate_red_10_obj, x1, y1, z1, 0, 0, 0)
-                print('10')
-            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=1:
-                draw_object(prostate_red_11_obj, x1, y1, z1, 0, 0, 0)
-                print('11')
-            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=2:
-                draw_object(prostate_red_12_obj, x1, y1, z1, 0, 0, 0)
-                print('12')
-        else:
-            draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
-    else:
-        draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
+    # if pressure >= 2.0:
+    #     print(x2-(x1-25/300*2), -z2+z1)
+    #     if -z2+z1>0.5 and -z2+z1<=1.5:
+    #         if x2-(x1-25/300*2)>=-2 and x2-(x1-25/300*2)<=-1:
+    #             draw_object(prostate_red_1_obj, x1, y1, z1, 0, 0, 0)
+    #             print('1')
+    #         elif x2-(x1-25/300*2)>-1 and x2-(x1-25/300*2)<=0:
+    #             draw_object(prostate_red_2_obj, x1, y1, z1, 0, 0, 0)
+    #             print('2')
+    #         elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=1:
+    #             draw_object(prostate_red_3_obj, x1, y1, z1, 0, 0, 0)
+    #             print('3')
+    #         elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=2:
+    #             draw_object(prostate_red_4_obj, x1, y1, z1, 0, 0, 0)
+    #             print('4')
+    #     elif -z2+z1>-0.5 and -z2+z1<=0.5:
+    #         if x2-(x1-25/300*2)>=-2 and x2-(x1-25/300*2)<=-1:
+    #             draw_object(prostate_red_5_obj, x1, y1, z1, 0, 0, 0)
+    #             print('5')
+    #         elif x2-(x1-25/300*2)>-1 and x2-(x1-25/300*2)<=0:
+    #             draw_object(prostate_red_6_obj, x1, y1, z1, 0, 0, 0)
+    #             print('6')
+    #         elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=1:
+    #             draw_object(prostate_red_7_obj, x1, y1, z1, 0, 0, 0)
+    #             print('7')
+    #         elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=2:
+    #             draw_object(prostate_red_8_obj, x1, y1, z1, 0, 0, 0)
+    #             print('8')
+    #     elif -z2+z1>-1.5 and -z2+z1<=-0.5:
+    #         if x2-(x1-25/300*2)>=-2 and x2-(x1-25/300*2)<=-1:
+    #             draw_object(prostate_red_9_obj, x1, y1, z1, 0, 0, 0)
+    #             print('9')
+    #         elif x2-(x1-25/300*2)>-1 and x2-(x1-25/300*2)<=0:
+    #             draw_object(prostate_red_10_obj, x1, y1, z1, 0, 0, 0)
+    #             print('10')
+    #         elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=1:
+    #             draw_object(prostate_red_11_obj, x1, y1, z1, 0, 0, 0)
+    #             print('11')
+    #         elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=2:
+    #             draw_object(prostate_red_12_obj, x1, y1, z1, 0, 0, 0)
+    #             print('12')
+    #     else:
+    #         draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
+    # else:
+    #     draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
 
 
-    """# Split prostate
+    # Split prostate
     if pressure >= 2.0:
 
         if x2-(x1-25/300*2)>=0 and -z2+z1>=0:
@@ -310,9 +322,9 @@ def on_draw():
         else: 
             draw_object(prostate_red_LB_obj, x1, y1, z1, 0, 0, 0)
     else:
-        draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)"""
+        draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
 
-    """
+"""
     # No split prostate
     if pressure >= 0.2 and pressure < 0.5:
         # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
@@ -333,15 +345,57 @@ def on_draw():
 # on the event of resizing the window
 @window.event
 def on_resize(width, height):  
-    global viewport_height, viewport_width
+    global viewport_height, viewport_width, zoom
     viewport_width, viewport_height = window.get_framebuffer_size()
     glViewport(0, 0, viewport_width, viewport_height)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    glFrustum(-2, 2, -2*float(viewport_height)/viewport_width, 2*float(viewport_height)/viewport_width, 1., 10.)
+    glFrustum(-zoom, zoom, -zoom*float(viewport_height)/viewport_width, zoom*float(viewport_height)/viewport_width, 1., 10.)
     glMatrixMode(GL_MODELVIEW)
     return True
 
+@window.event
+def on_mouse_scroll(x, y, scroll_x, scroll_y):
+    global zoom, viewport_height, viewport_width
+    if not(zoom <=1 and scroll_y <0):
+        zoom += scroll_y/5
+    print(zoom)
+    glViewport(0, 0, viewport_width, viewport_height)
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    glFrustum(-zoom, zoom, -zoom*float(viewport_height)/viewport_width, zoom*float(viewport_height)/viewport_width, 1., 100.)
+    glMatrixMode(GL_MODELVIEW)
+    pass
+
+@window.event
+def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
+    global rot_cam
+    m = 0.15
+    x, y = rot_cam
+    x, y = x + dx * m, y + dy * m
+    y = max(-90, min(90, y))
+    rot_cam = (x,y)
+    print(rot_cam)
+    pass
+
+@window.event
+def on_key_press(symbol, modifiers):
+    global cam_pos
+    x, y, z= cam_pos
+    if symbol == key.W:
+        z -= 1                
+    elif symbol == key.S:
+        z += 1
+    elif symbol == key.A:
+        x += 1
+    elif symbol == key.D:
+        x -= 1
+    elif symbol == key.SPACE or symbol == key.UP:
+        y -= 1
+    elif symbol == key.DOWN:
+        y += 1
+    cam_pos = (x,y,z)
+    pass
 pyglet.clock.schedule(update)
 pyglet.app.run()
 sys.exit(app.exec())

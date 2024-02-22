@@ -75,7 +75,9 @@ x_offset = 0
 y_offset = -3
 z_offset = -8 
 csvfileName = 'data_20_feb_2024\data_0010_same_pos1.csv'  # change it to the desired file (.csv) location
-
+zoom = 2
+rot_cam = (0, 0)
+cam_pos = (0, 0, 0)
 #---------------------------------Functions&Classes-----------------------------------------------------------------------------------------------
 # Setting the Thread function with returns
 class ThreadWithReturnValue(Thread):
@@ -167,8 +169,18 @@ def aurora2opengl(x,y,z):
     return [x,y,z]
 
 def draw_object(obj, x, y, z, rot_x, rot_y, rot_z):
-    glPushMatrix
+    global rot_cam, cam_pos
+
     glLoadIdentity()
+    glPushMatrix
+
+    rot_cam_x, rot_cam_y = rot_cam
+    cam_x, cam_y, cam_z = cam_pos
+    print("1", rot_cam)
+    glRotatef(rot_cam_x, 0, 1, 0)
+    glRotatef(-rot_cam_y, math.cos(math.radians(rot_cam_x)), 0, math.sin(math.radians(rot_cam_x)))
+    glTranslated(cam_x, cam_y, cam_z)
+
     glTranslated(x, y, z)
     glRotatef(rot_x, -1.0, 0.0, 0.0)
     glRotatef(rot_y, 0.0, -1.0, 0.0)
@@ -270,6 +282,49 @@ def on_resize(width, height):
     glFrustum(-2, 2, -2*float(viewport_height)/viewport_width, 2*float(viewport_height)/viewport_width, 1., 10.)
     glMatrixMode(GL_MODELVIEW)
     return True
+
+@window.event
+def on_mouse_scroll(x, y, scroll_x, scroll_y):
+    global zoom, viewport_height, viewport_width
+    if not(zoom <=1 and scroll_y <0):
+        zoom += scroll_y/5
+    print(zoom)
+    glViewport(0, 0, viewport_width, viewport_height)
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    glFrustum(-zoom, zoom, -zoom*float(viewport_height)/viewport_width, zoom*float(viewport_height)/viewport_width, 1., 100.)
+    glMatrixMode(GL_MODELVIEW)
+    pass
+
+@window.event
+def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
+    global rot_cam
+    m = 0.15
+    x, y = rot_cam
+    x, y = x + dx * m, y + dy * m
+    y = max(-90, min(90, y))
+    rot_cam = (x,y)
+    print(rot_cam)
+    pass
+
+@window.event
+def on_key_press(symbol, modifiers):
+    global cam_pos
+    x, y, z= cam_pos
+    if symbol == key.W:
+        z -= 1                
+    elif symbol == key.S:
+        z += 1
+    elif symbol == key.A:
+        x += 1
+    elif symbol == key.D:
+        x -= 1
+    elif symbol == key.SPACE or symbol == key.UP:
+        y -= 1
+    elif symbol == key.DOWN:
+        y += 1
+    cam_pos = (x,y,z)
+    pass
 
 pyglet.clock.schedule(update)
 pyglet.app.run()
