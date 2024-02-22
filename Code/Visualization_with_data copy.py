@@ -19,7 +19,7 @@ import sys  # We need sys so that we can pass argv to QApplication
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
 
 root_path = os.path.dirname(__file__)
-data_file = 'data\data_plastic_hand.csv'  # change to desire data (.csv) file name
+data_file = 'data_20_feb_2024\data_0050_same_pos.csv'  # change to desire data (.csv) file name
 # hand obj
 hand_obj = Wavefront(os.path.join(root_path, 'Object/hand/right_hand.obj'))
 hand_red_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_red.obj'))
@@ -177,14 +177,14 @@ def q2e(qw, qx, qy, qz):
     return X, Y, Z
 
 def aurora2opengl(x,y,z):
-    x = x/300*2
-    y = (y/300-1)*2*float(viewport_height)/viewport_width
-    z = (-z-210)/420*10
+    x = -x/300*2
+    y = (-y/300-1)*2*float(viewport_height)/viewport_width
+    z = (z-210)/420*10
     return [x,y,z]
 
 def distance_ori(x1, y1, z1, x2, y2, z2):
     # calculate distance after force is applied
-    return math.sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
+    return math.sqrt((x2-(x1-25/300*2))**2 + (-z2+z1)**2 + (-z2+z1)**2)
 
 
 def draw_object(obj, x, y, z, rot_x, rot_y, rot_z):
@@ -252,44 +252,44 @@ def on_draw():
 
     # Split more prostate
     if pressure >= 2.0:
-        print(x2-x1, y2-y1)
-        if y2-y1>0.5 and y2-y1<=1.5:
-            if x2-x1>=-2 and x2-x1<=-1:
+        print(x2-(x1-25/300*2), -z2+z1)
+        if -z2+z1>0.5 and -z2+z1<=1.5:
+            if x2-(x1-25/300*2)>=-2 and x2-(x1-25/300*2)<=-1:
                 draw_object(prostate_red_1_obj, x1, y1, z1, 0, 0, 0)
                 print('1')
-            elif x2-x1>-1 and x2-x1<=0:
+            elif x2-(x1-25/300*2)>-1 and x2-(x1-25/300*2)<=0:
                 draw_object(prostate_red_2_obj, x1, y1, z1, 0, 0, 0)
                 print('2')
-            elif x2-x1>0 and x2-x1<=1:
+            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=1:
                 draw_object(prostate_red_3_obj, x1, y1, z1, 0, 0, 0)
                 print('3')
-            elif x2-x1>0 and x2-x1<=2:
+            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=2:
                 draw_object(prostate_red_4_obj, x1, y1, z1, 0, 0, 0)
                 print('4')
-        elif y2-y1>-0.5 and y2-y1<=0.5:
-            if x2-x1>=-2 and x2-x1<=-1:
+        elif -z2+z1>-0.5 and -z2+z1<=0.5:
+            if x2-(x1-25/300*2)>=-2 and x2-(x1-25/300*2)<=-1:
                 draw_object(prostate_red_5_obj, x1, y1, z1, 0, 0, 0)
                 print('5')
-            elif x2-x1>-1 and x2-x1<=0:
+            elif x2-(x1-25/300*2)>-1 and x2-(x1-25/300*2)<=0:
                 draw_object(prostate_red_6_obj, x1, y1, z1, 0, 0, 0)
                 print('6')
-            elif x2-x1>0 and x2-x1<=1:
+            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=1:
                 draw_object(prostate_red_7_obj, x1, y1, z1, 0, 0, 0)
                 print('7')
-            elif x2-x1>0 and x2-x1<=2:
+            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=2:
                 draw_object(prostate_red_8_obj, x1, y1, z1, 0, 0, 0)
                 print('8')
-        elif y2-y1>-1.5 and y2-y1<=-0.5:
-            if x2-x1>=-2 and x2-x1<=-1:
+        elif -z2+z1>-1.5 and -z2+z1<=-0.5:
+            if x2-(x1-25/300*2)>=-2 and x2-(x1-25/300*2)<=-1:
                 draw_object(prostate_red_9_obj, x1, y1, z1, 0, 0, 0)
                 print('9')
-            elif x2-x1>-1 and x2-x1<=0:
+            elif x2-(x1-25/300*2)>-1 and x2-(x1-25/300*2)<=0:
                 draw_object(prostate_red_10_obj, x1, y1, z1, 0, 0, 0)
                 print('10')
-            elif x2-x1>0 and x2-x1<=1:
+            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=1:
                 draw_object(prostate_red_11_obj, x1, y1, z1, 0, 0, 0)
                 print('11')
-            elif x2-x1>0 and x2-x1<=2:
+            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=2:
                 draw_object(prostate_red_12_obj, x1, y1, z1, 0, 0, 0)
                 print('12')
         else:
@@ -301,11 +301,11 @@ def on_draw():
     """# Split prostate
     if pressure >= 2.0:
 
-        if x2-x1>=0 and y2-y1>=0:
+        if x2-(x1-25/300*2)>=0 and -z2+z1>=0:
             draw_object(prostate_red_RT_obj, x1, y1, z1, 0, 0, 0)
-        elif x2-x1>=0 and y2-y1<=0:
+        elif x2-(x1-25/300*2)>=0 and -z2+z1<=0:
             draw_object(prostate_red_RB_obj, x1, y1, z1, 0, 0, 0)
-        elif x2-x1<0 and y2-y1>0:
+        elif x2-(x1-25/300*2)<0 and -z2+z1>0:
             draw_object(prostate_red_LT_obj, x1, y1, z1, 0, 0, 0)
         else: 
             draw_object(prostate_red_LB_obj, x1, y1, z1, 0, 0, 0)

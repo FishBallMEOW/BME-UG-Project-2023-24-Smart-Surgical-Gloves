@@ -74,7 +74,7 @@ strain = []
 x_offset = 0
 y_offset = -3
 z_offset = -8 
-csvfileName = 'ImportObject\data\data_rigid1.csv'  # change it to the desired file (.csv) location
+csvfileName = 'data_20_feb_2024\data_0010_same_pos1.csv'  # change it to the desired file (.csv) location
 
 #---------------------------------Functions&Classes-----------------------------------------------------------------------------------------------
 # Setting the Thread function with returns
@@ -161,9 +161,9 @@ def q2e(qw, qx, qy, qz):
 
 
 def aurora2opengl(x,y,z):
-    x = x/300*2
-    y = (y/300-1)*2*float(viewport_height)/viewport_width
-    z = (-z-210)/420*10
+    x = -x/300*2
+    y = (-y/300-1)*2*float(viewport_height)/viewport_width
+    z = (z-210)/420*10
     return [x,y,z]
 
 def draw_object(obj, x, y, z, rot_x, rot_y, rot_z):
@@ -190,18 +190,17 @@ def update(dt):
 
     pressure = dataPressure[0][0]
 
-    [z1, x1, y1] = dataLocation[0][0][0][0][4:7]/40
-    [z2, x2, y2] = dataLocation[0][0][1][0][4:7]/40
-    
+    [z1, x1, y1] = dataLocation[0][0][0][0][4:7]
+    [z2, x2, y2] = dataLocation[0][0][1][0][4:7]
+    print('BEFORE:', 'x2:', x2, 'y2:', y2, 'z2:', z2)
     [x1, y1, z1] = aurora2opengl(x1, y1, z1)
     [x2, y2, z2] = aurora2opengl(x2, y2, z2)
 
     rot_z1, rot_x1, rot_y1  = q2e(dataLocation[0][0][0][0][0],dataLocation[0][0][0][0][1],dataLocation[0][0][0][0][2],dataLocation[0][0][0][0][3])
     rot_z2, rot_x2, rot_y2  = q2e(dataLocation[0][0][1][0][0],dataLocation[0][0][1][0][1],dataLocation[0][0][1][0][2],dataLocation[0][0][1][0][3])  # transformed the coordinate system (aurora: x,y,z --> opengl: z, x, y)
 
-    print('1',
-          dataLocation[0][0][0][0][4], dataLocation[0][0][1][0][4], dataPressure[0][0])
-    # print('x2:', x2, 'y2:', y2, 'z2:', z2)
+    #print('1', dataLocation[0][0][0][0][4], dataLocation[0][0][1][0][4], dataPressure[0][0])
+    print('x2:', x2, 'y2:', y2, 'z2:', z2)
     with open(csvfileName, 'a', newline='') as csvfile:
         fieldnames = ['timestamps', 'qw1', 'qx1', 'qy1', 'qz1', 'x1', 'y1', 'z1', 'qw2', 'qx2', 'qy2', 'qz2', 'x2', 'y2', 'z2', 'pressure']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -244,30 +243,16 @@ def on_draw():
     glLoadIdentity()
     glLightfv(GL_LIGHT0, GL_POSITION, lightfv(-1.0, 1.0, 1.0, 0.0))
     draw_object(plane_obj, 0, -2, -5, 0, 0, 0)    #draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
+    draw_object(hand_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
     #draw_object()
-    if pressure >= 0.2 and pressure < 0.5:
-        # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
-        draw_object(hand_green_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
-    elif pressure >= 0.5 and pressure < 1.0:
-        # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
-        draw_object(hand_yellow_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
-    elif pressure >= 1.0 and pressure < 2.0:
-        # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
-        draw_object(hand_orange_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
-    elif pressure >= 2.0:
-        # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
-        draw_object(hand_red_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
-    else:
-        # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
-        draw_object(hand_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
 
-    if pressure >= 2.0:
-        print(x2-x1, y2-y1)
-        if x2-x1>=0 and y2-y1>=0:
+    if pressure >= 0.5:
+        print(x2-(x1-25/300*2), -z2+z1)
+        if x2-(x1-25/300*2)>=0 and -z2+z1>=0:
             draw_object(prostate_red_RT_obj, x1, y1, z1, 0, 0, 0)
-        elif x2-x1>=0 and y2-y1<=0:
+        elif x2-(x1-25/300*2)>=0 and -z2+z1<=0:
             draw_object(prostate_red_RB_obj, x1, y1, z1, 0, 0, 0)
-        elif x2-x1<0 and y2-y1>0:
+        elif x2-(x1-25/300*2)<0 and -z2+z1>0:
             draw_object(prostate_red_LT_obj, x1, y1, z1, 0, 0, 0)
         else: 
             draw_object(prostate_red_LB_obj, x1, y1, z1, 0, 0, 0)
@@ -282,7 +267,7 @@ def on_resize(width, height):
     glViewport(0, 0, viewport_width, viewport_height)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    glFrustum(-2, 2, -2*float(viewport_height)/viewport_width, 2*float(viewport_height)/viewport_width, 1., 100.)
+    glFrustum(-2, 2, -2*float(viewport_height)/viewport_width, 2*float(viewport_height)/viewport_width, 1., 10.)
     glMatrixMode(GL_MODELVIEW)
     return True
 
