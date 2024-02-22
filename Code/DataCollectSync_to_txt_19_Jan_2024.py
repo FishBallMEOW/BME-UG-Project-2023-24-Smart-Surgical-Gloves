@@ -15,6 +15,7 @@ from PyQt6 import QtWidgets, QtCore
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
 import sys  # We need sys so that we can pass argv to QApplication
+from pyglet.window import key, mouse
 
 
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
