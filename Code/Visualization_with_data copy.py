@@ -27,7 +27,7 @@ hand_orange_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_orange.obj
 hand_yellow_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_yellow.obj'))
 hand_green_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_green.obj'))
 # prostate obj
-# prostate_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic.obj'))
+prostate_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic.obj'))
 # prostate_red_RT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RT_red.obj'))
 # prostate_red_RB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RB_red.obj'))
 # prostate_red_LT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LT_red.obj'))
@@ -95,9 +95,8 @@ rot_cam = (0, 0)
 cam_pos = (0, 0, 0)
 
 #---------------------------------Functions&Classes-----------------------------------------------------------------------------------------------
-# Setting the Thread function with returns
 class ThreadWithReturnValue(Thread):
-    
+    # Setting the Thread function with returns
     def __init__(self, group=None, target=None, name=None,
                  args=(), kwargs={}, Verbose=None):
         Thread.__init__(self, group, target, name, args, kwargs)
@@ -112,14 +111,15 @@ class ThreadWithReturnValue(Thread):
         return self._return
 
 class MainWindow(QtWidgets.QMainWindow):
+    # The class for plotting real-time data
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
-        # setting  the geometry of window 
-        self.setGeometry(1025, 25, 500, 380)
-
+        # setting the initial geometry of window 
+        self.setGeometry(1025, 25, 500, 380) 
         self.graphWidget = pg.PlotWidget()
         self.setCentralWidget(self.graphWidget)
+
         self.x = list(range(100))  # 100 time points
         self.y = [0 for _ in range(100)]  # 100 data points
 
@@ -128,10 +128,10 @@ class MainWindow(QtWidgets.QMainWindow):
         pen = pg.mkPen(color=(255, 0, 0), width=3)
         self.data_line =  self.graphWidget.plot(self.x, self.y, pen=pen)
     
-    def set_x_y_size(self, x_left, y_top, width, height):
+    def set_x_y_size(self, x_left, y_top, width, height):  # location and dimension
         self.setGeometry(x_left, y_top, width, height)
 
-    def set_title(self, title):
+    def set_title(self, title):  # title
         self.graphWidget.setTitle(title, color="b", size="30pt")
 
     def update_plot_data(self, data):
@@ -148,31 +148,29 @@ class MainWindow(QtWidgets.QMainWindow):
         return self.y[-1]-self.y[-2]  # difference between the current data point and the previous 
 
 class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
+    # The class for plotting stress-strain data
 
     def __init__(self, *args, **kwargs):
         super(MainWindow_wo_x_lim, self).__init__(*args, **kwargs)
-        # setting  the geometry of window 
+        # setting the initial geometry of window 
         self.setGeometry(1025, 435, 500, 380)
-
         self.graphWidget = pg.PlotWidget()
         self.setCentralWidget(self.graphWidget)
         self.x = [0]  # initialize list
         self.y = [0]  # initialize ist
-
-        self.graphWidget.setBackground('w')
-
-        pen = pg.mkPen(color=(255, 255, 255), width=3)
+        self.graphWidget.setBackground('w')  # Background color
+        pen = pg.mkPen(color=(255, 255, 255), width=3)  # line color to white --> invisible
         self.data_line =  self.graphWidget.plot(self.x, self.y, pen=pen, symbol="+", symbolSize=10, symbolBrush="b",)
     
-    def set_x_y_size(self, x_left, y_top, width, height):
+    def set_x_y_size(self, x_left, y_top, width, height):  # location and dimension
         self.setGeometry(x_left, y_top, width, height)
 
-    def set_title(self, title):
+    def set_title(self, title):  # title 
         self.graphWidget.setTitle(title, color="b", size="30pt")
 
     def update_plot_data(self, x, y):
 
-        self.x.append(x)  # Add a new value 1 higher than the last.
+        self.x.append(x)  # Add a new recent value.
 
         self.y.append(y)  # Add a new recent value.
 
@@ -216,7 +214,10 @@ def q2e(qw, qx, qy, qz):
 
     return X, Y, Z
 
-def aurora2opengl(x,y,z):
+def aurora2opengl(x,y,z): 
+    """
+    translate the input coordinates from aurora to opengl coordinates
+    """
     x = -x/300*2
     y = (-y/300-1)*2*float(viewport_height)/viewport_width
     z = (z-210)/420*10
@@ -306,9 +307,9 @@ Pressure_w.show()
 Stress_strain_w = MainWindow_wo_x_lim()
 Stress_strain_w.set_title("Stress-Strain Graph")
 Stress_strain_w.show()
+
 #---------------------------------Loop----------------------------------------------------------------------------------------------------------
-# on the event of creating/ drawing the window
-@window.event  
+@window.event  # on the event of creating/ drawing the window
 def on_draw():  
     window.clear()
     glLoadIdentity()
