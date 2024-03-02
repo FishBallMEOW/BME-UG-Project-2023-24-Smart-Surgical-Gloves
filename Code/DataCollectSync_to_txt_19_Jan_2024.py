@@ -9,6 +9,7 @@ import pyglet
 from pyglet.gl import *
 from pyglet.window import mouse
 from pywavefront import visualization, Wavefront
+import pandas as pd
 import csv
 import numpy as np
 from PyQt6 import QtWidgets, QtCore
@@ -16,8 +17,10 @@ from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
 import sys  # We need sys so that we can pass argv to QApplication
 from pyglet.window import key, mouse
-
-
+import numpy.polynomial.polynomial as poly
+from sklearn.linear_model import LinearRegression, Lasso
+from sklearn.svm import SVR
+from sklearn import metrics
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
 
 root_path = os.path.dirname(__file__)
@@ -29,10 +32,23 @@ hand_yellow_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_yellow.obj
 hand_green_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_green.obj'))
 # prostate obj
 prostate_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic.obj'))
-prostate_red_RT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RT_red.obj'))
-prostate_red_RB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RB_red.obj'))
-prostate_red_LT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LT_red.obj'))
-prostate_red_LB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LB_red.obj'))
+# prostate_red_RT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RT_red.obj'))
+# prostate_red_RB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RB_red.obj'))
+# prostate_red_LT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LT_red.obj'))
+# prostate_red_LB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LB_red.obj'))
+# prostate obj more cut 
+prostate_red_1_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_1.obj'))
+prostate_red_2_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_2.obj'))
+prostate_red_3_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_3.obj'))
+prostate_red_4_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_4.obj'))
+prostate_red_5_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_5.obj'))
+prostate_red_6_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_6.obj'))
+prostate_red_7_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_7.obj'))
+prostate_red_8_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_8.obj'))
+prostate_red_9_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_9.obj'))
+prostate_red_10_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_10.obj'))
+prostate_red_11_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_11.obj'))
+prostate_red_12_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_12.obj'))
 # plane obj
 plane_obj = Wavefront(os.path.join(root_path, 'Object/hand/plane.obj'))
 

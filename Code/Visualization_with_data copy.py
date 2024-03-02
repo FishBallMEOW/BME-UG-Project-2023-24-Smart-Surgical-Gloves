@@ -66,7 +66,6 @@ df_location_2 = df_location_2.loc[i2]
 df_pressure = df_pressure.loc[i3]
 
 #---------------------------------Variables---------------------------------------------------------------------------------------------------------
-
 viewport_width=1280
 viewport_height=1080
 rotation = 0.0
