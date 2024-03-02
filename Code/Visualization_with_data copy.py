@@ -21,7 +21,7 @@ from sklearn import metrics
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
 
 root_path = os.path.dirname(__file__)
-data_file = 'data/20_feb_2024/data_20_feb_2024/data_0050_same_pos.csv'  # change to desire data (.csv) file name
+data_file = 'data/20_feb_2024/data_20_feb_2024/data_0010_same_pos.csv'  # change to desire data (.csv) file name
 # hand obj
 hand_obj = Wavefront(os.path.join(root_path, 'Object/hand/right_hand.obj'))
 hand_red_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_red.obj'))
@@ -182,16 +182,6 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
         self.y_LR_all = []
         self.x_temp_LR = []
         self.y_LR = []
-        self.x_temp_lasso_reg_all = []
-        self.y_lasso_reg_all = []
-        self.x_temp_lasso_reg = []
-        self.y_lasso_reg = []
-        self.x_temp_SVR_rbf_all = []
-        self.y_SVR_rbf_all = []
-        self.x_temp_SVR_rbf = []
-        self.y_SVR_rbf = []
-        
-
 
         self.graphWidget.setBackground('w')  # Background color
         self.graphWidget.addLegend()  # legend
@@ -216,18 +206,8 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
         # LR 
         pen = pg.mkPen(color=(255, 0, 0), width=3)
         self.data_line_linear_reg_all = self.graphWidget.plot(self.x_temp_LR_all, self.y_LR_all, pen=pen, name="LR (overall)",)
-        pen = pg.mkPen(color=(100, 0, 0), width=3)
+        pen = pg.mkPen(color=(255, 0, 0), width=3)
         self.data_line_linear_reg = self.graphWidget.plot(self.x_temp_LR, self.y_LR, pen=pen, name="LR (each press)",)
-        # Lasso
-        pen = pg.mkPen(color=(0, 255, 0), width=3)
-        self.data_line_lasso_reg_all = self.graphWidget.plot(self.x_temp_lasso_reg_all, self.y_lasso_reg_all, pen=pen, name="Lasso (overall)",)
-        pen = pg.mkPen(color=(0, 100, 0), width=3)
-        self.data_line_lasso_reg = self.graphWidget.plot(self.x_temp_lasso_reg, self.y_lasso_reg, pen=pen, name="Lasso (each press)",)
-        # SVR_rbf
-        pen = pg.mkPen(color=(0, 0, 255), width=3)
-        self.data_line_SVR_rbf_all = self.graphWidget.plot(self.x_temp_SVR_rbf_all, self.y_SVR_rbf_all, pen=pen, name="SVR_rbf (overall)",)
-        pen = pg.mkPen(color=(0, 0, 100), width=3)
-        self.data_line_SVR_rbf = self.graphWidget.plot(self.x_temp_SVR_rbf, self.y_SVR_rbf, pen=pen, name="SVR_rbf (each press)",)
 
     def set_x_y_size(self, x_left, y_top, width, height):  # location and dimension
         self.setGeometry(x_left, y_top, width, height)
@@ -247,7 +227,7 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
     def return_data_each_press(self):
         return self.x_temp, self.y_temp
 
-    def regression_each_press(self, model='LR'):
+    def regression_each_press(self, model='LR', plot_bool=False):
 
         if len(self.x_temp)!=0 and len(self.y_temp)!=0:
             X_train = np.array(self.x_temp)
@@ -260,67 +240,56 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
                 
                 # linear log regression
                 if model == 'logLR':
-                    LR = LinearRegression().fit(np.log(X_train), y_train)
-                    y_pred = LR.predict(np.log(X_test))
-                    self.data_line_linear_log_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+                    LR_log= LinearRegression()
+                    LR_log.fit(np.log(X_train), y_train)
+                    y_pred = LR_log.predict(np.log(X_test))
+                    if plot_bool:
+                        self.data_line_linear_log_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
 
                 # linear regression
                 if model == 'LR':
-                    LR = LinearRegression().fit(X_train, y_train)
+                    LR = LinearRegression()
+                    LR.fit(X_train, y_train)
                     y_pred = LR.predict(X_test)
-                    self.data_line_linear_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-
-                # Lasso
-                if model == 'lasso':
-                    Lasso_reg = Lasso().fit(X_train, y_train)
-                    y_pred = Lasso_reg.predict(X_test)
-                    self.data_line_lasso_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+                    if plot_bool:
+                        self.data_line_linear_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+                    return LR.coef_
                 
-                # SVR
-                if model == 'SVR':
-                    SVR_rbf = SVR(kernel='rbf').fit(X_train, y_train)
-                    y_pred = SVR_rbf.predict(X_test)
-                    self.data_line_SVR_rbf.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-
         #reset
         self.x_temp = []
         self.y_temp = []
-
-    def regression_all(self, model='LR'):
+        return 0
+    
+    def regression_all(self, model='LR', plot_bool=False):
         if len(self.x)!=0 and len(self.y)!=0:
             X_train = np.array(self.x)
             y_train = np.array(self.y)
             zero_idx = np.where(X_train==0)
             X_train = np.delete(X_train, zero_idx).reshape(-1, 1)
             y_train = np.ravel(np.delete(y_train, zero_idx))
-            
             if len(X_train)!=0 and len(y_train)!=0:
                 X_test = np.linspace(np.min(X_train)/2,np.max(X_train),50).reshape(-1, 1)
                 
                 # linear log regression
                 if model == 'logLR':
-                    LR = LinearRegression().fit(np.log(X_train), y_train)
-                    y_pred = LR.predict(np.log(X_test))
-                    self.data_line_linear_log_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-
+                    LR_log_all = LinearRegression()
+                    LR_log_all.fit(np.log(X_train), y_train)
+                    y_pred = LR_log_all.predict(np.log(X_test))
+                    if plot_bool:
+                        self.data_line_linear_log_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+                
                 # linear regression
                 if model == 'LR':
-                    LR = LinearRegression().fit(X_train, y_train)
-                    y_pred = LR.predict(X_test)
-                    self.data_line_linear_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-
-                # Lasso
-                if model == 'lasso':
-                    Lasso_reg = Lasso().fit(X_train, y_train)
-                    y_pred = Lasso_reg.predict(X_test)
-                    self.data_line_lasso_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+                    LR_all = LinearRegression()
+                    LR_all.fit(X_train, y_train)
+                    y_pred = LR_all.predict(X_test)
+                    stiff = LR_all.coef_
+                    if plot_bool:
+                        self.data_line_linear_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+                    return stiff
                 
-                # SVR
-                if model == 'SVR':
-                    SVR_rbf = SVR(kernel='rbf').fit(X_train, y_train)
-                    y_pred = SVR_rbf.predict(X_test)
-                    self.data_line_SVR_rbf_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-
+        return 0
+    
 def readLocation(t):
     # Read the data from the Location sensor
     dataLocation = [] 
@@ -414,9 +383,6 @@ def update(dt):
     [qw1, rot_z1, rot_x1, rot_y1, z1, x1, y1] = dataLocation[0][0]  # aurora (x,y,z) --> opengl (z, x, y)
     [qw2, rot_z2, rot_x2, rot_y2, z2, x2, y2] = dataLocation[1][0]
 
-    [x1, y1, z1] = aurora2opengl(x1, y1, z1)
-    [x2, y2, z2] = aurora2opengl(x2, y2, z2)
-
     rot_x1, rot_y1, rot_z1 = q2e(qw1, rot_x1, rot_y1, rot_z1)
     rot_x2, rot_y2, rot_z2 = q2e(qw2, rot_x2, rot_y2, rot_z2)
     
@@ -437,17 +403,18 @@ def update(dt):
         trigger = True
     if pressure_diff <= 0 and trigger:
         x_i, y_i, z_i = 0.0, 0.0, 0.0
-        #Stress_strain_w.regression_each_press('logLR')
-        Stress_strain_w.regression_all('logLR')
-        #Stress_strain_w.regression_each_press('LR')
-        Stress_strain_w.regression_all('LR')
-        Stress_strain_w.regression_all('lasso')
+        #Stress_strain_w.regression_each_press('logLR')  # 'lasso')  # 'SVR')
+        Stiff_LR = Stress_strain_w.regression_each_press('LR', True)
+        Stress_strain_w.set_title(f"Stiffness(each press): {Stiff_LR}")
         trigger = False
-    strain = distance_ori(x_i, y_i, z_i, x2, y2, z2)
+    strain = distance_ori(x_i, y_i, z_i, x2, y2, z2)/1000
     # print(x_i, y_i, z_i, x2, y2, z2)
     # print(trigger, ' strain=', strain)
     if trigger: 
         Stress_strain_w.update_plot_data(strain, pressure_moving_ave)
+
+    [x1, y1, z1] = aurora2opengl(x1, y1, z1)
+    [x2, y2, z2] = aurora2opengl(x2, y2, z2)
 
     time.sleep(0.02)
 
