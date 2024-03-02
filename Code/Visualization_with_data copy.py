@@ -160,7 +160,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def pressure_diff(self):
         return self.y[-1]-self.y[-2]  # difference between the current data point and the previous 
 
-
 class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
     # The class for plotting stress-strain data
 
@@ -322,9 +321,6 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
                     SVR_rbf = SVR(kernel='rbf').fit(X_train, y_train)
                     y_pred = SVR_rbf.predict(X_test)
                     self.data_line_SVR_rbf_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-        
-
-
 
 def readLocation(t):
     # Read the data from the Location sensor
@@ -380,7 +376,7 @@ def distance_ori(x1, y1, z1, x2, y2, z2):
 
 def draw_object(obj, x, y, z, rot_x, rot_y, rot_z):
     global rot_cam, cam_pos
-    
+
     glLoadIdentity()
     glPushMatrix()
 

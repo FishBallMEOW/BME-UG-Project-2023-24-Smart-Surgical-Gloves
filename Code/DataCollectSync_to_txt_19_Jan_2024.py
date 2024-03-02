@@ -49,7 +49,7 @@ tracker.use_quaternions = "true"
 
 #---------------------------------Variables---------------------------------------------------------------------------------------------------------
 viewport_width=1280
-viewport_height=720
+viewport_height=1080
 rotation = 0.0
 timer = 0.0
 lightfv = ctypes.c_float * 4
@@ -72,6 +72,8 @@ steps = -1
 trigger = False
 stress = []
 strain = []
+moving_ave_temp = []
+time_pressure = []
 x_offset = 0
 y_offset = -3
 z_offset = -8 
@@ -79,10 +81,10 @@ csvfileName = 'data_20_feb_2024\data_0010_same_pos1.csv'  # change it to the des
 zoom = 2
 rot_cam = (0, 0)
 cam_pos = (0, 0, 0)
+
 #---------------------------------Functions&Classes-----------------------------------------------------------------------------------------------
-# Setting the Thread function with returns
 class ThreadWithReturnValue(Thread):
-    
+    # Setting the Thread function with returns
     def __init__(self, group=None, target=None, name=None,
                  args=(), kwargs={}, Verbose=None):
         Thread.__init__(self, group, target, name, args, kwargs)
@@ -96,14 +98,26 @@ class ThreadWithReturnValue(Thread):
         Thread.join(self, *args)
         return self._return
 
-# window for the plots
 class MainWindow(QtWidgets.QMainWindow):
+    # The class for plotting real-time data
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
-
+        # setting the initial geometry of window 
+        self.setGeometry(1025, 25, 500, 380) 
         self.graphWidget = pg.PlotWidget()
         self.setCentralWidget(self.graphWidget)
+        
+        # setting the axis label
+        self.graphWidget.setLabel(
+            "left",
+            '<span style="color: black; font-size: 18px">Pressure</span>'
+        )
+        self.graphWidget.setLabel(
+            "bottom",
+            '<span style="color: black; font-size: 18px">Time</span>'
+        )
+
         self.x = list(range(100))  # 100 time points
         self.y = [0 for _ in range(100)]  # 100 data points
 
@@ -112,8 +126,11 @@ class MainWindow(QtWidgets.QMainWindow):
         pen = pg.mkPen(color=(255, 0, 0), width=3)
         self.data_line =  self.graphWidget.plot(self.x, self.y, pen=pen)
     
-    def set_title(self, title):
-        self.graphWidget.setTitle(title, color="b", size="30pt")
+    def set_x_y_size(self, x_left, y_top, width, height):  # location and dimension
+        self.setGeometry(x_left, y_top, width, height)
+
+    def set_title(self, title):  # title
+        self.graphWidget.setTitle(title, color="k", size="20pt")
 
     def update_plot_data(self, data):
 
@@ -124,6 +141,171 @@ class MainWindow(QtWidgets.QMainWindow):
         self.y.append(data)  # Add a new recent value.
 
         self.data_line.setData(self.x, self.y)  # Update the data.
+
+    def pressure_diff(self):
+        return self.y[-1]-self.y[-2]  # difference between the current data point and the previous 
+
+class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
+    # The class for plotting stress-strain data
+
+    def __init__(self, *args, **kwargs):
+        super(MainWindow_wo_x_lim, self).__init__(*args, **kwargs)
+        # setting the initial geometry of window 
+        self.setGeometry(1025, 435, 500, 380)
+        self.graphWidget = pg.PlotWidget()
+        self.setCentralWidget(self.graphWidget)
+        
+        # initialize list
+        self.x = []  
+        self.y = []  
+        self.x_temp = []
+        self.y_temp = []
+        self.x_temp_log_LR_all = []
+        self.y_log_LR_all = []
+        self.x_temp_log_LR = []
+        self.y_log_LR = []
+        self.x_temp_LR_all = []
+        self.y_LR_all = []
+        self.x_temp_LR = []
+        self.y_LR = []
+        self.x_temp_lasso_reg_all = []
+        self.y_lasso_reg_all = []
+        self.x_temp_lasso_reg = []
+        self.y_lasso_reg = []
+        self.x_temp_SVR_rbf_all = []
+        self.y_SVR_rbf_all = []
+        self.x_temp_SVR_rbf = []
+        self.y_SVR_rbf = []
+        
+
+
+        self.graphWidget.setBackground('w')  # Background color
+        self.graphWidget.addLegend()  # legend
+        # setting the axis label
+        self.graphWidget.setLabel(
+            "left",
+            '<span style="color: black; font-size: 18px">Stress</span>'
+        )
+        self.graphWidget.setLabel(
+            "bottom",
+            '<span style="color: black; font-size: 18px">Strain</span>'
+        )
+        
+        # Data points
+        pen = pg.mkPen(color=(255, 255, 255), width=3)  # line color to white --> invisible
+        self.data_line =  self.graphWidget.plot(self.x, self.y, pen=pen, symbol="o", symbolSize=5, symbolBrush="k", name="Data point(s)",)
+        # log LR 
+        pen = pg.mkPen(color=(255, 0, 0), width=3)
+        self.data_line_linear_log_reg_all = self.graphWidget.plot(self.x_temp_log_LR_all, self.y_log_LR_all, pen=pen, name="log LR (overall)",)
+        pen = pg.mkPen(color=(100, 0, 0), width=3)
+        self.data_line_linear_log_reg = self.graphWidget.plot(self.x_temp_log_LR, self.y_log_LR, pen=pen, name="log LR (each press)",)
+        # LR 
+        pen = pg.mkPen(color=(255, 0, 0), width=3)
+        self.data_line_linear_reg_all = self.graphWidget.plot(self.x_temp_LR_all, self.y_LR_all, pen=pen, name="LR (overall)",)
+        pen = pg.mkPen(color=(100, 0, 0), width=3)
+        self.data_line_linear_reg = self.graphWidget.plot(self.x_temp_LR, self.y_LR, pen=pen, name="LR (each press)",)
+        # Lasso
+        pen = pg.mkPen(color=(0, 255, 0), width=3)
+        self.data_line_lasso_reg_all = self.graphWidget.plot(self.x_temp_lasso_reg_all, self.y_lasso_reg_all, pen=pen, name="Lasso (overall)",)
+        pen = pg.mkPen(color=(0, 100, 0), width=3)
+        self.data_line_lasso_reg = self.graphWidget.plot(self.x_temp_lasso_reg, self.y_lasso_reg, pen=pen, name="Lasso (each press)",)
+        # SVR_rbf
+        pen = pg.mkPen(color=(0, 0, 255), width=3)
+        self.data_line_SVR_rbf_all = self.graphWidget.plot(self.x_temp_SVR_rbf_all, self.y_SVR_rbf_all, pen=pen, name="SVR_rbf (overall)",)
+        pen = pg.mkPen(color=(0, 0, 100), width=3)
+        self.data_line_SVR_rbf = self.graphWidget.plot(self.x_temp_SVR_rbf, self.y_SVR_rbf, pen=pen, name="SVR_rbf (each press)",)
+
+    def set_x_y_size(self, x_left, y_top, width, height):  # location and dimension
+        self.setGeometry(x_left, y_top, width, height)
+
+    def set_title(self, title):  # title 
+        self.graphWidget.setTitle(title, color="k", size="20pt")
+
+    def update_plot_data(self, x, y):
+
+        self.x.append(x)  # Add a new recent value.
+        self.y.append(y)  # Add a new recent value.
+        self.x_temp.append(x)
+        self.y_temp.append(y)
+
+        self.data_line.setData(self.x, self.y)  # Update the data.
+
+    def return_data_each_press(self):
+        return self.x_temp, self.y_temp
+
+    def regression_each_press(self, model='LR'):
+
+        if len(self.x_temp)!=0 and len(self.y_temp)!=0:
+            X_train = np.array(self.x_temp)
+            y_train = np.array(self.y_temp)
+            zero_idx = np.where(X_train==0)
+            X_train = np.delete(X_train, zero_idx).reshape(-1, 1)
+            y_train = np.ravel(np.delete(y_train, zero_idx))
+            if len(X_train)!=0 and len(y_train)!=0:
+                X_test = np.linspace(np.min(X_train)/2,np.max(X_train),50).reshape(-1, 1)
+                
+                # linear log regression
+                if model == 'logLR':
+                    LR = LinearRegression().fit(np.log(X_train), y_train)
+                    y_pred = LR.predict(np.log(X_test))
+                    self.data_line_linear_log_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+
+                # linear regression
+                if model == 'LR':
+                    LR = LinearRegression().fit(X_train, y_train)
+                    y_pred = LR.predict(X_test)
+                    self.data_line_linear_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+
+                # Lasso
+                if model == 'lasso':
+                    Lasso_reg = Lasso().fit(X_train, y_train)
+                    y_pred = Lasso_reg.predict(X_test)
+                    self.data_line_lasso_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+                
+                # SVR
+                if model == 'SVR':
+                    SVR_rbf = SVR(kernel='rbf').fit(X_train, y_train)
+                    y_pred = SVR_rbf.predict(X_test)
+                    self.data_line_SVR_rbf.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+
+        #reset
+        self.x_temp = []
+        self.y_temp = []
+
+    def regression_all(self, model='LR'):
+        if len(self.x)!=0 and len(self.y)!=0:
+            X_train = np.array(self.x)
+            y_train = np.array(self.y)
+            zero_idx = np.where(X_train==0)
+            X_train = np.delete(X_train, zero_idx).reshape(-1, 1)
+            y_train = np.ravel(np.delete(y_train, zero_idx))
+            
+            if len(X_train)!=0 and len(y_train)!=0:
+                X_test = np.linspace(np.min(X_train)/2,np.max(X_train),50).reshape(-1, 1)
+                
+                # linear log regression
+                if model == 'logLR':
+                    LR = LinearRegression().fit(np.log(X_train), y_train)
+                    y_pred = LR.predict(np.log(X_test))
+                    self.data_line_linear_log_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+
+                # linear regression
+                if model == 'LR':
+                    LR = LinearRegression().fit(X_train, y_train)
+                    y_pred = LR.predict(X_test)
+                    self.data_line_linear_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+
+                # Lasso
+                if model == 'lasso':
+                    Lasso_reg = Lasso().fit(X_train, y_train)
+                    y_pred = Lasso_reg.predict(X_test)
+                    self.data_line_lasso_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+                
+                # SVR
+                if model == 'SVR':
+                    SVR_rbf = SVR(kernel='rbf').fit(X_train, y_train)
+                    y_pred = SVR_rbf.predict(X_test)
+                    self.data_line_SVR_rbf_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
 
 def readLocation():
     # Read the data from the Location sensor
@@ -145,6 +327,7 @@ def readPressure():
     return dataPressure
 
 def q2e(qw, qx, qy, qz):
+    # translate quaternion to euler angle
     ysqr = qy * qy
 
     t0 = +2.0 * (qw * qx + qy * qz)
@@ -162,36 +345,42 @@ def q2e(qw, qx, qy, qz):
 
     return X, Y, Z
 
-
-def aurora2opengl(x,y,z):
+def aurora2opengl(x,y,z): 
+    """
+    translate the input coordinates from aurora to opengl coordinates
+    """
     x = -x/300*2
     y = (-y/300-1)*2*float(viewport_height)/viewport_width
     z = (z-210)/420*10
     return [x,y,z]
 
+def distance_ori(x1, y1, z1, x2, y2, z2):
+    # calculate distance after force is applied
+    return math.sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
+
+
 def draw_object(obj, x, y, z, rot_x, rot_y, rot_z):
     global rot_cam, cam_pos
 
     glLoadIdentity()
-    glPushMatrix
+    glPushMatrix()
 
     rot_cam_x, rot_cam_y = rot_cam
     cam_x, cam_y, cam_z = cam_pos
-    print("1", rot_cam)
     glRotatef(rot_cam_x, 0, 1, 0)
     glRotatef(-rot_cam_y, math.cos(math.radians(rot_cam_x)), 0, math.sin(math.radians(rot_cam_x)))
     glTranslated(cam_x, cam_y, cam_z)
 
     glTranslated(x, y, z)
-    glRotatef(rot_x, -1.0, 0.0, 0.0)
-    glRotatef(rot_y, 0.0, -1.0, 0.0)
+    glRotatef(rot_x, -1.0, 0.0, 0.0)  # negative because of the conversion of the coordinates
+    glRotatef(rot_y, 0.0, -1.0, 0.0)  # same as x
     glRotatef(rot_z, 0.0, 0.0, 1.0)
     visualization.draw(obj)
-    glPopMatrix
+    glPopMatrix()
 
 
 def update(dt):
-    global x1, y1, z1, rot_x1, rot_y1, rot_z1, x2, y2, z2, rot_x2, rot_y2, rot_z2, pressure, trigger, x_i, y_i, z_i, stress, strain
+    global x1, y1, z1, rot_x1, rot_y1, rot_z1, x2, y2, z2, rot_x2, rot_y2, rot_z2, t, pressure, trigger, x_i, y_i, z_i, stress, strain, moving_ave_temp
     t_readLocation = ThreadWithReturnValue(target=readLocation, name='t_readLocation')
     t_readPressure = ThreadWithReturnValue(target=readPressure, name='t_readPressure')
 
@@ -205,7 +394,7 @@ def update(dt):
 
     [z1, x1, y1] = dataLocation[0][0][0][0][4:7]
     [z2, x2, y2] = dataLocation[0][0][1][0][4:7]
-    print('BEFORE:', 'x2:', x2, 'y2:', y2, 'z2:', z2)
+
     [x1, y1, z1] = aurora2opengl(x1, y1, z1)
     [x2, y2, z2] = aurora2opengl(x2, y2, z2)
 
@@ -213,7 +402,7 @@ def update(dt):
     rot_z2, rot_x2, rot_y2  = q2e(dataLocation[0][0][1][0][0],dataLocation[0][0][1][0][1],dataLocation[0][0][1][0][2],dataLocation[0][0][1][0][3])  # transformed the coordinate system (aurora: x,y,z --> opengl: z, x, y)
 
     #print('1', dataLocation[0][0][0][0][4], dataLocation[0][0][1][0][4], dataPressure[0][0])
-    print('x2:', x2, 'y2:', y2, 'z2:', z2)
+    # print('x2:', x2, 'y2:', y2, 'z2:', z2)
     with open(csvfileName, 'a', newline='') as csvfile:
         fieldnames = ['timestamps', 'qw1', 'qx1', 'qy1', 'qz1', 'x1', 'y1', 'z1', 'qw2', 'qx2', 'qy2', 'qz2', 'x2', 'y2', 'z2', 'pressure']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -224,8 +413,34 @@ def update(dt):
         writer.writerow({'timestamps':dataPressure[0][1], 'pressure':dataPressure[0][0]})
     csvfile.close
 
-    # update for the plot
-    force_w.update_plot_data(pressure)
+    # moving average 
+    if len(moving_ave_temp) <= 10:
+        moving_ave_temp.append(pressure)
+    else:
+        moving_ave_temp = moving_ave_temp[1:]
+        moving_ave_temp.append(pressure)
+
+    pressure_moving_ave = float(sum(moving_ave_temp))/max(len(moving_ave_temp), 1)
+    Pressure_w.update_plot_data(pressure_moving_ave)  #pressure)
+    
+    pressure_diff = Pressure_w.pressure_diff()
+    # print('pressure_diff=', pressure_diff)
+    if pressure_moving_ave >= 0.5 and pressure_moving_ave <= 10 and not trigger:  # remove abnormal pressure > 10
+        x_i, y_i, z_i = x2, y2, z2
+        trigger = True
+    if pressure_diff <= 0 and trigger:
+        x_i, y_i, z_i = 0.0, 0.0, 0.0
+        #Stress_strain_w.regression_each_press('logLR')
+        Stress_strain_w.regression_all('logLR')
+        #Stress_strain_w.regression_each_press('LR')
+        Stress_strain_w.regression_all('LR')
+        Stress_strain_w.regression_all('lasso')
+        trigger = False
+    strain = distance_ori(x_i, y_i, z_i, x2, y2, z2)
+    # print(x_i, y_i, z_i, x2, y2, z2)
+    # print(trigger, ' strain=', strain)
+    if trigger: 
+        Stress_strain_w.update_plot_data(strain, pressure_moving_ave)
 
 
 #---------------------------------Initialization------------------------------------------------------------------------------------------------
@@ -234,7 +449,8 @@ tracker.start_tracking()
 
 # Creating a window
 window = pyglet.window.Window(viewport_width, viewport_height, "Surgical Gloves", resizable=True)
-
+window.set_minimum_size(600, 500)
+window.set_location(0, 35)
 # initialize csvwriter
 with open(csvfileName, 'w', newline='') as csvfile:
     fieldnames = ['timestamps', 'qw1', 'qx1', 'qy1', 'qz1', 'x1', 'y1', 'z1', 'qw2', 'qx2', 'qy2', 'qz2', 'x2', 'y2', 'z2', 'pressure']
@@ -244,43 +460,111 @@ csvfile.close
 
 # Initialize the widget for the plot of pressure
 app = QtWidgets.QApplication(sys.argv)
-force_w = MainWindow()
-force_w.set_title("Pressure")
-force_w.show()
+Pressure_w = MainWindow()
+Pressure_w.set_title("Pressure")
+Pressure_w.show()
+Stress_strain_w = MainWindow_wo_x_lim()
+Stress_strain_w.set_title("Stress-Strain Graph")
+Stress_strain_w.show()
 
 #---------------------------------Loop----------------------------------------------------------------------------------------------------------
-# on the event of creating/ drawing the window
-@window.event  
+@window.event  # on the event of creating/ drawing the window
 def on_draw():  
     window.clear()
     glLoadIdentity()
     glLightfv(GL_LIGHT0, GL_POSITION, lightfv(-1.0, 1.0, 1.0, 0.0))
-    draw_object(plane_obj, 0, -2, -5, 0, 0, 0)    #draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
+    draw_object(plane_obj, 0, -2, -5, 0, 0, 0)
+    # draw_object(prostate_red_7_obj, 0, 0, -5, 0, 0, 0)
     draw_object(hand_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
-    #draw_object()
 
+    # Split more prostate
     if pressure >= 0.5:
-        print(x2-(x1-25/300*2), -z2+z1)
-        if x2-(x1-25/300*2)>=0 and -z2+z1>=0:
-            draw_object(prostate_red_RT_obj, x1, y1, z1, 0, 0, 0)
-        elif x2-(x1-25/300*2)>=0 and -z2+z1<=0:
-            draw_object(prostate_red_RB_obj, x1, y1, z1, 0, 0, 0)
-        elif x2-(x1-25/300*2)<0 and -z2+z1>0:
-            draw_object(prostate_red_LT_obj, x1, y1, z1, 0, 0, 0)
-        else: 
-            draw_object(prostate_red_LB_obj, x1, y1, z1, 0, 0, 0)
+        # print(x2-(x1-25/300*2), -z2+z1)
+        if -z2+z1>0.5 and -z2+z1<=1.5:
+            if x2-(x1-25/300*2)>=-2 and x2-(x1-25/300*2)<=-1:
+                draw_object(prostate_red_1_obj, x1, y1, z1, 0, 0, 0)
+                # print('1')
+            elif x2-(x1-25/300*2)>-1 and x2-(x1-25/300*2)<=0:
+                draw_object(prostate_red_2_obj, x1, y1, z1, 0, 0, 0)
+                # print('2')
+            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=1:
+                draw_object(prostate_red_3_obj, x1, y1, z1, 0, 0, 0)
+                # print('3')
+            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=2:
+                draw_object(prostate_red_4_obj, x1, y1, z1, 0, 0, 0)
+                # print('4')
+        elif -z2+z1>-0.5 and -z2+z1<=0.5:
+            if x2-(x1-25/300*2)>=-2 and x2-(x1-25/300*2)<=-1:
+                draw_object(prostate_red_5_obj, x1, y1, z1, 0, 0, 0)
+                # print('5')
+            elif x2-(x1-25/300*2)>-1 and x2-(x1-25/300*2)<=0:
+                draw_object(prostate_red_6_obj, x1, y1, z1, 0, 0, 0)
+                # print('6')
+            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=1:
+                draw_object(prostate_red_7_obj, x1, y1, z1, 0, 0, 0)
+                # print('7')
+            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=2:
+                draw_object(prostate_red_8_obj, x1, y1, z1, 0, 0, 0)
+                # print('8')
+        elif -z2+z1>-1.5 and -z2+z1<=-0.5:
+            if x2-(x1-25/300*2)>=-2 and x2-(x1-25/300*2)<=-1:
+                draw_object(prostate_red_9_obj, x1, y1, z1, 0, 0, 0)
+                # print('9')
+            elif x2-(x1-25/300*2)>-1 and x2-(x1-25/300*2)<=0:
+                draw_object(prostate_red_10_obj, x1, y1, z1, 0, 0, 0)
+                # print('10')
+            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=1:
+                draw_object(prostate_red_11_obj, x1, y1, z1, 0, 0, 0)
+                # print('11')
+            elif x2-(x1-25/300*2)>0 and x2-(x1-25/300*2)<=2:
+                draw_object(prostate_red_12_obj, x1, y1, z1, 0, 0, 0)
+                # print('12')
+        else:
+            draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
     else:
         draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
+
+
+    # Split prostate
+    # if pressure >= 2.0:
+    #     if x2-(x1-25/300*2)>=0 and -z2+z1>=0:
+    #         draw_object(prostate_red_RT_obj, x1, y1, z1, 0, 0, 0)
+    #     elif x2-(x1-25/300*2)>=0 and -z2+z1<=0:
+    #         draw_object(prostate_red_RB_obj, x1, y1, z1, 0, 0, 0)
+    #     elif x2-(x1-25/300*2)<0 and -z2+z1>0:
+    #         draw_object(prostate_red_LT_obj, x1, y1, z1, 0, 0, 0)
+    #     else: 
+    #         draw_object(prostate_red_LB_obj, x1, y1, z1, 0, 0, 0)
+    # else:
+    #     draw_object(prostate_obj, x1, y1, z1, 0, 0, 0)
+
+
+    # No split prostate
+    # if pressure >= 0.2 and pressure < 0.5:
+    #     # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
+    #     draw_object(hand_green_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
+    # elif pressure >= 0.5 and pressure < 1.0:
+    #     # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
+    #     draw_object(hand_yellow_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
+    # elif pressure >= 1.0 and pressure < 2.0:
+    #     # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
+    #     draw_object(hand_orange_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
+    # elif pressure >= 2.0:
+    #     # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
+    #     draw_object(hand_red_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
+    # else:
+    #     # draw_object(prostate_obj, x1, y1, z1, rot_x1, rot_y1, rot_z1)
+    #     draw_object(hand_obj, x2, y2, z2, rot_x2, rot_y2, rot_z2)
 
 # on the event of resizing the window
 @window.event
 def on_resize(width, height):  
-    global viewport_height, viewport_width
+    global viewport_height, viewport_width, zoom
     viewport_width, viewport_height = window.get_framebuffer_size()
     glViewport(0, 0, viewport_width, viewport_height)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    glFrustum(-2, 2, -2*float(viewport_height)/viewport_width, 2*float(viewport_height)/viewport_width, 1., 10.)
+    glFrustum(-zoom, zoom, -zoom*float(viewport_height)/viewport_width, zoom*float(viewport_height)/viewport_width, 1., 10.)
     glMatrixMode(GL_MODELVIEW)
     return True
 
@@ -289,7 +573,6 @@ def on_mouse_scroll(x, y, scroll_x, scroll_y):
     global zoom, viewport_height, viewport_width
     if not(zoom <=1 and scroll_y <0):
         zoom += scroll_y/5
-    print(zoom)
     glViewport(0, 0, viewport_width, viewport_height)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
@@ -305,21 +588,26 @@ def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
     x, y = x + dx * m, y + dy * m
     y = max(-90, min(90, y))
     rot_cam = (x,y)
-    print(rot_cam)
     pass
 
 @window.event
 def on_key_press(symbol, modifiers):
-    global cam_pos
+    global cam_pos, rot_cam
     x, y, z= cam_pos
+    rot_x, rot_y = rot_cam
+    # print(math.sin(math.radians(-rot_x)), math.cos(math.radians(-rot_x)))
     if symbol == key.W:
-        z -= 1                
+        x += 1*math.sin(math.radians(-int(rot_x))) 
+        z += 1*math.cos(math.radians(-int(rot_x)))            
     elif symbol == key.S:
-        z += 1
+        x -= 1*math.sin(math.radians(-int(rot_x))) 
+        z -= 1*math.cos(math.radians(-int(rot_x)))   
     elif symbol == key.A:
-        x += 1
+        z -= 1*math.sin(math.radians(-int(rot_x))) 
+        x += 1*math.cos(math.radians(-int(rot_x)))  
     elif symbol == key.D:
-        x -= 1
+        z += 1*math.sin(math.radians(-int(rot_x))) 
+        x -= 1*math.cos(math.radians(-int(rot_x)))
     elif symbol == key.SPACE or symbol == key.UP:
         y -= 1
     elif symbol == key.DOWN:
@@ -327,10 +615,10 @@ def on_key_press(symbol, modifiers):
     cam_pos = (x,y,z)
     pass
 
+
 pyglet.clock.schedule(update)
 pyglet.app.run()
-
-
+sys.exit(app.exec())
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
 
