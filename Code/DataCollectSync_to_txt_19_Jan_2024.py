@@ -21,6 +21,7 @@ import numpy.polynomial.polynomial as poly
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.svm import SVR
 from sklearn import metrics
+import RealTimePlotter
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
 
 root_path = os.path.dirname(__file__)
@@ -87,7 +88,8 @@ rot_z2 = 0.0
 steps = -1
 trigger = False
 stress = []
-strain = []
+strain = 0.0
+strain_diff = 0.0
 moving_ave_temp = []
 time_pressure = []
 x_offset = 0
@@ -113,215 +115,6 @@ class ThreadWithReturnValue(Thread):
     def join(self, *args):
         Thread.join(self, *args)
         return self._return
-
-class MainWindow(QtWidgets.QMainWindow):
-    # The class for plotting real-time data
-
-    def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
-        # setting the initial geometry of window 
-        self.setGeometry(1025, 25, 500, 380) 
-        self.graphWidget = pg.PlotWidget()
-        self.setCentralWidget(self.graphWidget)
-        
-        # setting the axis label
-        self.graphWidget.setLabel(
-            "left",
-            '<span style="color: black; font-size: 18px">Pressure</span>'
-        )
-        self.graphWidget.setLabel(
-            "bottom",
-            '<span style="color: black; font-size: 18px">Time</span>'
-        )
-
-        self.x = list(range(100))  # 100 time points
-        self.y = [0 for _ in range(100)]  # 100 data points
-
-        self.graphWidget.setBackground('w')
-
-        pen = pg.mkPen(color=(255, 0, 0), width=3)
-        self.data_line =  self.graphWidget.plot(self.x, self.y, pen=pen)
-    
-    def set_x_y_size(self, x_left, y_top, width, height):  # location and dimension
-        self.setGeometry(x_left, y_top, width, height)
-
-    def set_title(self, title):  # title
-        self.graphWidget.setTitle(title, color="k", size="20pt")
-
-    def update_plot_data(self, data):
-
-        self.x = self.x[1:]  # Remove the first y element.
-        self.x.append(self.x[-1] + 1)  # Add a new value 1 higher than the last.
-
-        self.y = self.y[1:]  # Remove the first
-        self.y.append(data)  # Add a new recent value.
-
-        self.data_line.setData(self.x, self.y)  # Update the data.
-
-    def pressure_diff(self):
-        return self.y[-1]-self.y[-2]  # difference between the current data point and the previous 
-
-class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
-    # The class for plotting stress-strain data
-
-    def __init__(self, *args, **kwargs):
-        super(MainWindow_wo_x_lim, self).__init__(*args, **kwargs)
-        # setting the initial geometry of window 
-        self.setGeometry(1025, 435, 500, 380)
-        self.graphWidget = pg.PlotWidget()
-        self.setCentralWidget(self.graphWidget)
-        
-        # initialize list
-        self.x = []  
-        self.y = []  
-        self.x_temp = []
-        self.y_temp = []
-        self.x_temp_log_LR_all = []
-        self.y_log_LR_all = []
-        self.x_temp_log_LR = []
-        self.y_log_LR = []
-        self.x_temp_LR_all = []
-        self.y_LR_all = []
-        self.x_temp_LR = []
-        self.y_LR = []
-        self.x_temp_lasso_reg_all = []
-        self.y_lasso_reg_all = []
-        self.x_temp_lasso_reg = []
-        self.y_lasso_reg = []
-        self.x_temp_SVR_rbf_all = []
-        self.y_SVR_rbf_all = []
-        self.x_temp_SVR_rbf = []
-        self.y_SVR_rbf = []
-        
-
-
-        self.graphWidget.setBackground('w')  # Background color
-        self.graphWidget.addLegend()  # legend
-        # setting the axis label
-        self.graphWidget.setLabel(
-            "left",
-            '<span style="color: black; font-size: 18px">Stress</span>'
-        )
-        self.graphWidget.setLabel(
-            "bottom",
-            '<span style="color: black; font-size: 18px">Strain</span>'
-        )
-        
-        # Data points
-        pen = pg.mkPen(color=(255, 255, 255), width=3)  # line color to white --> invisible
-        self.data_line =  self.graphWidget.plot(self.x, self.y, pen=pen, symbol="o", symbolSize=5, symbolBrush="k", name="Data point(s)",)
-        # log LR 
-        pen = pg.mkPen(color=(255, 0, 0), width=3)
-        self.data_line_linear_log_reg_all = self.graphWidget.plot(self.x_temp_log_LR_all, self.y_log_LR_all, pen=pen, name="log LR (overall)",)
-        pen = pg.mkPen(color=(100, 0, 0), width=3)
-        self.data_line_linear_log_reg = self.graphWidget.plot(self.x_temp_log_LR, self.y_log_LR, pen=pen, name="log LR (each press)",)
-        # LR 
-        pen = pg.mkPen(color=(255, 0, 0), width=3)
-        self.data_line_linear_reg_all = self.graphWidget.plot(self.x_temp_LR_all, self.y_LR_all, pen=pen, name="LR (overall)",)
-        pen = pg.mkPen(color=(100, 0, 0), width=3)
-        self.data_line_linear_reg = self.graphWidget.plot(self.x_temp_LR, self.y_LR, pen=pen, name="LR (each press)",)
-        # Lasso
-        pen = pg.mkPen(color=(0, 255, 0), width=3)
-        self.data_line_lasso_reg_all = self.graphWidget.plot(self.x_temp_lasso_reg_all, self.y_lasso_reg_all, pen=pen, name="Lasso (overall)",)
-        pen = pg.mkPen(color=(0, 100, 0), width=3)
-        self.data_line_lasso_reg = self.graphWidget.plot(self.x_temp_lasso_reg, self.y_lasso_reg, pen=pen, name="Lasso (each press)",)
-        # SVR_rbf
-        pen = pg.mkPen(color=(0, 0, 255), width=3)
-        self.data_line_SVR_rbf_all = self.graphWidget.plot(self.x_temp_SVR_rbf_all, self.y_SVR_rbf_all, pen=pen, name="SVR_rbf (overall)",)
-        pen = pg.mkPen(color=(0, 0, 100), width=3)
-        self.data_line_SVR_rbf = self.graphWidget.plot(self.x_temp_SVR_rbf, self.y_SVR_rbf, pen=pen, name="SVR_rbf (each press)",)
-
-    def set_x_y_size(self, x_left, y_top, width, height):  # location and dimension
-        self.setGeometry(x_left, y_top, width, height)
-
-    def set_title(self, title):  # title 
-        self.graphWidget.setTitle(title, color="k", size="20pt")
-
-    def update_plot_data(self, x, y):
-
-        self.x.append(x)  # Add a new recent value.
-        self.y.append(y)  # Add a new recent value.
-        self.x_temp.append(x)
-        self.y_temp.append(y)
-
-        self.data_line.setData(self.x, self.y)  # Update the data.
-
-    def return_data_each_press(self):
-        return self.x_temp, self.y_temp
-
-    def regression_each_press(self, model='LR'):
-
-        if len(self.x_temp)!=0 and len(self.y_temp)!=0:
-            X_train = np.array(self.x_temp)
-            y_train = np.array(self.y_temp)
-            zero_idx = np.where(X_train==0)
-            X_train = np.delete(X_train, zero_idx).reshape(-1, 1)
-            y_train = np.ravel(np.delete(y_train, zero_idx))
-            if len(X_train)!=0 and len(y_train)!=0:
-                X_test = np.linspace(np.min(X_train)/2,np.max(X_train),50).reshape(-1, 1)
-                
-                # linear log regression
-                if model == 'logLR':
-                    LR = LinearRegression().fit(np.log(X_train), y_train)
-                    y_pred = LR.predict(np.log(X_test))
-                    self.data_line_linear_log_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-
-                # linear regression
-                if model == 'LR':
-                    LR = LinearRegression().fit(X_train, y_train)
-                    y_pred = LR.predict(X_test)
-                    self.data_line_linear_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-
-                # Lasso
-                if model == 'lasso':
-                    Lasso_reg = Lasso().fit(X_train, y_train)
-                    y_pred = Lasso_reg.predict(X_test)
-                    self.data_line_lasso_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-                
-                # SVR
-                if model == 'SVR':
-                    SVR_rbf = SVR(kernel='rbf').fit(X_train, y_train)
-                    y_pred = SVR_rbf.predict(X_test)
-                    self.data_line_SVR_rbf.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-
-        #reset
-        self.x_temp = []
-        self.y_temp = []
-
-    def regression_all(self, model='LR'):
-        if len(self.x)!=0 and len(self.y)!=0:
-            X_train = np.array(self.x)
-            y_train = np.array(self.y)
-            zero_idx = np.where(X_train==0)
-            X_train = np.delete(X_train, zero_idx).reshape(-1, 1)
-            y_train = np.ravel(np.delete(y_train, zero_idx))
-            
-            if len(X_train)!=0 and len(y_train)!=0:
-                X_test = np.linspace(np.min(X_train)/2,np.max(X_train),50).reshape(-1, 1)
-                
-                # linear log regression
-                if model == 'logLR':
-                    LR = LinearRegression().fit(np.log(X_train), y_train)
-                    y_pred = LR.predict(np.log(X_test))
-                    self.data_line_linear_log_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-
-                # linear regression
-                if model == 'LR':
-                    LR = LinearRegression().fit(X_train, y_train)
-                    y_pred = LR.predict(X_test)
-                    self.data_line_linear_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-
-                # Lasso
-                if model == 'lasso':
-                    Lasso_reg = Lasso().fit(X_train, y_train)
-                    y_pred = Lasso_reg.predict(X_test)
-                    self.data_line_lasso_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-                
-                # SVR
-                if model == 'SVR':
-                    SVR_rbf = SVR(kernel='rbf').fit(X_train, y_train)
-                    y_pred = SVR_rbf.predict(X_test)
-                    self.data_line_SVR_rbf_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
 
 def readLocation():
     # Read the data from the Location sensor
@@ -374,7 +167,6 @@ def distance_ori(x1, y1, z1, x2, y2, z2):
     # calculate distance after force is applied
     return math.sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
 
-
 def draw_object(obj, x, y, z, rot_x, rot_y, rot_z):
     global rot_cam, cam_pos
 
@@ -394,7 +186,6 @@ def draw_object(obj, x, y, z, rot_x, rot_y, rot_z):
     visualization.draw(obj)
     glPopMatrix()
 
-
 def update(dt):
     global x1, y1, z1, rot_x1, rot_y1, rot_z1, x2, y2, z2, rot_x2, rot_y2, rot_z2, t, pressure, trigger, x_i, y_i, z_i, stress, strain, moving_ave_temp
     t_readLocation = ThreadWithReturnValue(target=readLocation, name='t_readLocation')
@@ -410,9 +201,6 @@ def update(dt):
 
     [z1, x1, y1] = dataLocation[0][0][0][0][4:7]
     [z2, x2, y2] = dataLocation[0][0][1][0][4:7]
-
-    [x1, y1, z1] = aurora2opengl(x1, y1, z1)
-    [x2, y2, z2] = aurora2opengl(x2, y2, z2)
 
     rot_z1, rot_x1, rot_y1  = q2e(dataLocation[0][0][0][0][0],dataLocation[0][0][0][0][1],dataLocation[0][0][0][0][2],dataLocation[0][0][0][0][3])
     rot_z2, rot_x2, rot_y2  = q2e(dataLocation[0][0][1][0][0],dataLocation[0][0][1][0][1],dataLocation[0][0][1][0][2],dataLocation[0][0][1][0][3])  # transformed the coordinate system (aurora: x,y,z --> opengl: z, x, y)
@@ -438,26 +226,29 @@ def update(dt):
 
     pressure_moving_ave = float(sum(moving_ave_temp))/max(len(moving_ave_temp), 1)
     Pressure_w.update_plot_data(pressure_moving_ave)  #pressure)
-    
+
     pressure_diff = Pressure_w.pressure_diff()
-    # print('pressure_diff=', pressure_diff)
-    if pressure_moving_ave >= 0.5 and pressure_moving_ave <= 10 and not trigger:  # remove abnormal pressure > 10
+
+    # start the sampling for the stress-strain plot
+    if pressure_moving_ave >= 0.5 and pressure_moving_ave <= 10 and not trigger:  # threshold: 0.5; remove abnormal pressure > 10
         x_i, y_i, z_i = x2, y2, z2
         trigger = True
-    if pressure_diff <= 0 and trigger:
+
+    if pressure_diff <= 0 and trigger:  # limit weird data point with pressure_diff > 5
         x_i, y_i, z_i = 0.0, 0.0, 0.0
-        #Stress_strain_w.regression_each_press('logLR')
-        Stress_strain_w.regression_all('logLR')
-        #Stress_strain_w.regression_each_press('LR')
-        Stress_strain_w.regression_all('LR')
-        Stress_strain_w.regression_all('lasso')
+        Stress_strain_w.regression_each_press('logLR', False, False, False) 
+        Stiff_LR = Stress_strain_w.regression_each_press('LR', True)
+        Stress_strain_w.set_title(f"Stiffness(each press): {round(Stiff_LR, 2)}")
         trigger = False
-    strain = distance_ori(x_i, y_i, z_i, x2, y2, z2)
-    # print(x_i, y_i, z_i, x2, y2, z2)
-    # print(trigger, ' strain=', strain)
+
+    # updating data if trigger is started and not yet stopped
+    strain = distance_ori(x_i, y_i, z_i, x2, y2, z2)/1000
     if trigger: 
         Stress_strain_w.update_plot_data(strain, pressure_moving_ave)
 
+    # aurora to opengl coordinates
+    [x1, y1, z1] = aurora2opengl(x1, y1, z1)
+    [x2, y2, z2] = aurora2opengl(x2, y2, z2)
 
 #---------------------------------Initialization------------------------------------------------------------------------------------------------
 #Initialize aurora
@@ -476,10 +267,10 @@ csvfile.close
 
 # Initialize the widget for the plot of pressure
 app = QtWidgets.QApplication(sys.argv)
-Pressure_w = MainWindow()
+Pressure_w = RealTimePlotter.MainWindow()
 Pressure_w.set_title("Pressure")
 Pressure_w.show()
-Stress_strain_w = MainWindow_wo_x_lim()
+Stress_strain_w = RealTimePlotter.MainWindow_wo_x_lim()
 Stress_strain_w.set_title("Stress-Strain Graph")
 Stress_strain_w.show()
 

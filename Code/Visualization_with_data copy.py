@@ -8,6 +8,7 @@ import pyglet
 from pyglet.gl import *
 from pywavefront import visualization, Wavefront
 import pandas as pd
+import csv
 import numpy as np
 from PyQt6 import QtWidgets, QtCore
 from pyqtgraph import PlotWidget, plot
