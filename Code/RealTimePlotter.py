@@ -72,7 +72,7 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
         # Clear data point
         clearDataPointAct = QAction('Clear data point(s)', self)
         clearMenu.addAction(clearDataPointAct)
-        clearDataPointAct.setShortcut('Ctrl+C')
+        clearDataPointAct.setShortcut('Ctrl+D')
         clearDataPointAct.setStatusTip('Clear all the data points')
         clearDataPointAct.triggered.connect(self.clear_data_points)
         # Clear fitted line
@@ -88,10 +88,28 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
         clearAllAct.setStatusTip('Clear all')
         clearAllAct.triggered.connect(self.clear_all)
 
+        # fitting method/model
+        fitMenu = QtWidgets.QMenu('Fitting Model', self)
+        # linear regression
+        fitLrAct = QAction('Linear Model', self)
+        fitMenu.addAction(fitLrAct)
+        fitLrAct.setStatusTip('Setting the fitting model to Linear Regression')
+        fitLrAct.triggered.connect(self.set_fit_model_LR)
+        # linear log regression
+        fitLogAct = QAction('Log Model', self)
+        fitMenu.addAction(fitLogAct)
+        fitLogAct.setStatusTip('Setting the fitting model to Linear Log Regression')
+        fitLogAct.triggered.connect(self.set_fit_model_logLR)
+        # linear exp regression
+        fitExpAct = QAction('Exp Model', self)
+        fitMenu.addAction(fitExpAct)
+        fitExpAct.setStatusTip('Setting the fitting model to Linear exp Regression')
+        fitExpAct.triggered.connect(self.set_fit_model_exp)
 
         # self.statusBar()
 
         toolMenu.addMenu(clearMenu)
+        toolMenu.addMenu(fitMenu)
         
 
         # plot
@@ -105,19 +123,18 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
 
     def init_variables(self):
         # initialize list
+        self.model = 'LR'
         self.x = []  
         self.y = []  
         self.x_temp = []
         self.y_temp = []
-        self.x_temp_log_LR_all = []
-        self.y_log_LR_all = []
         self.x_temp_log_LR = []
         self.y_log_LR = []
-        self.x_temp_LR_all = []
-        self.y_LR_all = []
         self.x_temp_LR = []
         self.y_LR = []
-        self.m_LR = 0
+        self.x_temp_exp_LR = []
+        self.y_exp_LR = []
+        self.m = 0
 
     def init_plot_style(self):
         self.graphWidget.setBackground('w')  # Background color
@@ -130,21 +147,35 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
         pen = pg.mkPen(color=(255, 255, 255), width=3)  # line color to white --> invisible
         self.data_line =  self.graphWidget.plot(self.x, self.y, pen=pen, symbol="o", symbolSize=5, symbolBrush="k", name="Data point(s)",)
         # log LR 
-        # pen = pg.mkPen(color=(255, 0, 0), width=3)
-        # self.data_line_linear_log_reg_all = self.graphWidget.plot(self.x_temp_log_LR_all, self.y_log_LR_all, pen=pen, name="log LR (overall)",)
         pen = pg.mkPen(color=(0, 0, 255), width=3)
         self.data_line_linear_log_reg = self.graphWidget.plot(self.x_temp_log_LR, self.y_log_LR, pen=pen, name="log LR (each press)",)
-        # # LR 
-        # pen = pg.mkPen(color=(255, 0, 0), width=3)
-        # self.data_line_linear_reg_all = self.graphWidget.plot(self.x_temp_LR_all, self.y_LR_all, pen=pen, name="LR (overall)",)
+        # LR 
         pen = pg.mkPen(color=(255, 0, 0), width=3)
         self.data_line_linear_reg = self.graphWidget.plot(self.x_temp_LR, self.y_LR, pen=pen, name="LR (each press)",)
-
+        # exp
+        pen = pg.mkPen(color=(0, 255, 0), width=3)
+        self.data_line_linear_exp_reg = self.graphWidget.plot(self.x_temp_exp_LR, self.y_exp_LR, pen=pen, name="exp (each press)",)
+        
     def set_x_y_size(self, x_left, y_top, width, height):  # location and dimension
         self.setGeometry(x_left, y_top, width, height)
 
     def set_title(self, title):  # title 
         self.graphWidget.setTitle(title, color="k", size="20pt")
+
+    def set_fit_model_LR(self):
+        self.model = 'LR'
+        self.data_line_linear_log_reg.setData([], [])  # Update the data.
+        self.data_line_linear_exp_reg.setData([], [])  # Update the data.
+
+    def set_fit_model_logLR(self):
+        self.model = 'logLR'
+        self.data_line_linear_reg.setData([], [])  # Update the data.
+        self.data_line_linear_exp_reg.setData([], [])  # Update the data.
+
+    def set_fit_model_exp(self):
+        self.model = 'exp'
+        self.data_line_linear_log_reg.setData([], [])  # Update the data.
+        self.data_line_linear_reg.setData([], [])  # Update the data.
 
     def update_plot_data(self, x, y):
         self.x.append(x)  # Add a new recent value.
@@ -156,7 +187,7 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
     def return_data_each_press(self):
         return self.x_temp, self.y_temp
 
-    def regression_each_press(self, model='LR', plot_bool=False, clear_bool=True, return_stiff_bool=True):
+    def regression_each_press(self, plot_bool=False, clear_bool=True, return_stiff_bool=True):
         if len(self.x_temp)!=0 and len(self.y_temp)!=0:
             X_train = np.array(self.x_temp)
             y_train = np.array(self.y_temp)
@@ -167,25 +198,32 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
                 X_test = np.linspace(np.min(X_train)/2,np.max(X_train),50)
                 
                 # Linear regression
-                if model == 'LR':
-                    self.m_LR, b = np.polyfit(X_train, y_train, 1)
-                    y_pred = self.m_LR*X_test+b
+                if self.model == 'LR':
+                    self.m, b = np.polyfit(X_train, y_train, 1)
+                    y_pred = self.m*X_test+b
                     if plot_bool:
                             self.data_line_linear_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
                 
                 # Log Linear regression
-                if model == 'logLR':
-                    self.m_LR, b = np.polyfit(np.log(X_train), y_train, 1)
-                    y_pred = self.m_LR*np.log(X_test)+b
+                if self.model == 'logLR':
+                    self.m, b = np.polyfit(np.log(X_train), y_train, 1)
+                    y_pred = self.m*np.log(X_test)+b
                     if plot_bool:
                             self.data_line_linear_log_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+
+                # Exponential 
+                if self.model == 'exp':
+                    self.m, b = np.polyfit(X_train, np.log(y_train), 1)
+                    y_pred = np.exp(self.m*X_test+b)
+                    if plot_bool:
+                            self.data_line_linear_exp_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
 
         # clear cache 
         if clear_bool:
             self.x_temp = []
             self.y_temp = []    
         if return_stiff_bool:
-            return self.m_LR
+            return self.m
    
     def clear_data_points(self):
         self.x = []
@@ -197,9 +235,13 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
     def clear_fitted_line(self):
         self.data_line_linear_log_reg.setData([], [])  # Update the data.
         self.data_line_linear_reg.setData([], [])  # Update the data.
+        self.data_line_linear_exp_reg.setData([], [])  # Update the data.
 
     def clear_all(self):
+        model_name = self.model
         self.init_variables()
+        self.model = model_name
         self.data_line_linear_log_reg.setData(self.x, self.y)  # Update the data.
         self.data_line_linear_reg.setData(self.x, self.y)  # Update the data.
+        self.data_line_linear_exp_reg.setData(self.x, self.y)  # Update the data.
         self.data_line.setData(self.x, self.y)  # Update the data.        

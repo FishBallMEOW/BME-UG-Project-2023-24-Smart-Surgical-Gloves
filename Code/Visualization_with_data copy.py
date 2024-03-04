@@ -228,8 +228,8 @@ def update(dt):
 
     if pressure_diff <= 0 and trigger:  # limit weird data point with pressure_diff > 5
         x_i, y_i, z_i = 0.0, 0.0, 0.0
-        Stress_strain_w.regression_each_press('logLR', False, False, False) 
-        Stiff_LR = Stress_strain_w.regression_each_press('LR', True)
+        Stress_strain_w.regression_each_press(False, False, False) 
+        Stiff_LR = Stress_strain_w.regression_each_press(True)
         Stress_strain_w.set_title(f"Stiffness(each press): {round(Stiff_LR, 2)}")
         trigger = False
 
