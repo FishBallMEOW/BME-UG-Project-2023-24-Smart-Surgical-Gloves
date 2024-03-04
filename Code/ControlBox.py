@@ -8,7 +8,7 @@ class MainWindow(QWidget):
         super().__init__(*args, **kwargs)
         self.close_bool = False
         self.setWindowTitle('Control')
-        self.setGeometry(100, 100, 300, 100)
+        self.setGeometry(1025, 25, 500, 70)
 
         layout = QHBoxLayout()
         self.setLayout(layout)
@@ -27,8 +27,12 @@ class MainWindow(QWidget):
     def instruction(self):
         QMessageBox.information(
             self,
-            'Information',
-            'This is important information.'
+            'Instruction',
+            'Left Panel(3D Graphics Simulation):' + 
+            '\nMovement: Forward(W), Backward(S), Right(D), Left(A), Up(Space/UpArrow), Down(Left Shift/DownArrow) \nZoom: Scroll \nRotate: Drag and move ' + 
+            '\n\nBottom Right Panel (Stress Strain Plot): \nTool(s): Clear(Clear components in the plot), Fitting Model(Choose the fitting model, Default Linear Model)' + 
+            '\nThe calculated stiffness of the current press is print in the title of the plot. As a reference, values of normal and cancerous stiffness[1] are given at the bottom of the panel.' + 
+            '\n\n[1]K. Hoyt et al., “Tissue elasticity properties as biomarkers for prostate cancer,” Cancer biomarkers : section A of Disease markers, vol. 4, no. 4–5, pp. 213–25, 2008, doi: https://doi.org/10.3233/cbm-2008-44-505.'
         )
 
     def question(self):

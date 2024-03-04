@@ -245,7 +245,7 @@ def update(dt):
     [x2, y2, z2] = aurora2opengl(x2, y2, z2)
 
     time.sleep(0.02)
-    
+
     close_bool = controlBox.return_close_bool()
     if close_bool:
         window.close()
@@ -412,7 +412,7 @@ def on_key_press(symbol, modifiers):
         x -= 1*math.cos(math.radians(-int(rot_x)))
     elif symbol == key.SPACE or symbol == key.UP:
         y -= 1
-    elif symbol == key.DOWN:
+    elif symbol == key.LSHIFT or symbol == key.DOWN:
         y += 1
     cam_pos = (x,y,z)
     pass

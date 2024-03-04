@@ -10,7 +10,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         # setting the initial geometry of window 
-        self.setGeometry(1025, 25, 500, 380) 
+        self.setGeometry(1025, 125, 500, 280) 
         self.setWindowTitle("Pressure")
         # plot
         self.graphWidget = pg.PlotWidget()
