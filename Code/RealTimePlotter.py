@@ -106,7 +106,7 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
         fitExpAct.setStatusTip('Setting the fitting model to Linear exp Regression')
         fitExpAct.triggered.connect(self.set_fit_model_exp)
 
-        # self.statusBar()
+        self.statusBar().showMessage('At 0.1Hz, Normal stiffness: ~3.8 kPa; Cancerous stiffness: ~7.8 kPa')
 
         toolMenu.addMenu(clearMenu)
         toolMenu.addMenu(fitMenu)

@@ -20,10 +20,11 @@ from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.svm import SVR
 from sklearn import metrics
 import RealTimePlotter
+import ControlBox
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
 
 root_path = os.path.dirname(__file__)
-data_file = 'data/20_feb_2024/data_20_feb_2024/data_0010_same_pos.csv'  # change to desire data (.csv) file name
+data_file = 'data/20_feb_2024/data_20_feb_2024/data_0030_same_pos.csv'  # change to desire data (.csv) file name
 # hand obj
 hand_obj = Wavefront(os.path.join(root_path, 'Object/hand/right_hand.obj'))
 hand_red_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_red.obj'))
@@ -98,6 +99,7 @@ time_pressure = []
 zoom = 2
 rot_cam = (0, 0)
 cam_pos = (0, 0, 0)
+close_bool = False
 
 #---------------------------------Functions&Classes-----------------------------------------------------------------------------------------------
 class ThreadWithReturnValue(Thread):
@@ -186,7 +188,7 @@ def draw_object(obj, x, y, z, rot_x, rot_y, rot_z):
     glPopMatrix()
 
 def update(dt):
-    global x1, y1, z1, rot_x1, rot_y1, rot_z1, x2, y2, z2, rot_x2, rot_y2, rot_z2, t, pressure, trigger, x_i, y_i, z_i, stress, strain, strain_diff, moving_ave_temp
+    global close_bool, x1, y1, z1, rot_x1, rot_y1, rot_z1, x2, y2, z2, rot_x2, rot_y2, rot_z2, t, pressure, trigger, x_i, y_i, z_i, stress, strain, strain_diff, moving_ave_temp
 
     if t == len(df_location_1.index):
         t = 0  # reset t to 0 to loop the data again
@@ -243,10 +245,16 @@ def update(dt):
     [x2, y2, z2] = aurora2opengl(x2, y2, z2)
 
     time.sleep(0.02)
+    
+    close_bool = controlBox.return_close_bool()
+    if close_bool:
+        window.close()
+        Pressure_w.close()
+        Stress_strain_w.close()
 
 #---------------------------------Initialization------------------------------------------------------------------------------------------------
 # Creating a window
-window = pyglet.window.Window(viewport_width, viewport_height, "Surgical Gloves", resizable=True)
+window = pyglet.window.Window(viewport_width, viewport_height, "3D Graphics Simulation", resizable=True)
 window.set_minimum_size(600, 500)
 window.set_location(0, 35)
 
@@ -259,6 +267,8 @@ Stress_strain_w = RealTimePlotter.MainWindow_wo_x_lim()
 Stress_strain_w.set_title("Stress-Strain Graph")
 Stress_strain_w.show()
 
+# Pop-up ControlBox
+controlBox = ControlBox.MainWindow()
 #---------------------------------Loop----------------------------------------------------------------------------------------------------------
 @window.event  # on the event of creating/ drawing the window
 def on_draw():  
