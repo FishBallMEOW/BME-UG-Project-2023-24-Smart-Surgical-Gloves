@@ -229,7 +229,7 @@ def update(dt):
         x_i, y_i, z_i = 0.0, 0.0, 0.0
         Stress_strain_w.regression_each_press('logLR', False, False, False) 
         Stiff_LR = Stress_strain_w.regression_each_press('LR', True)
-        Stress_strain_w.set_title(f"Stiffness(each press): {Stiff_LR}")
+        Stress_strain_w.set_title(f"Stiffness(each press): {round(Stiff_LR, 2)}")
         trigger = False
 
     # updating data if trigger is started and not yet stopped

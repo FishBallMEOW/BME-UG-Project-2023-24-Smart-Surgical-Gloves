@@ -2,7 +2,7 @@ from PyQt6 import QtWidgets, QtCore
 import pyqtgraph as pg
 import numpy as np
 from sklearn.linear_model import LinearRegression, Lasso
-from PyQt6.QtGui import QIcon, QAction
+from PyQt6.QtGui import QIcon, QAction, QAction
 
 class MainWindow(QtWidgets.QMainWindow):
     # The class for plotting real-time data
@@ -64,17 +64,35 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
         self.init_plot_style()
         
     def init_UI(self):
-        # Clear
-        clearAct = QAction(QIcon('exit.png'), '&Clear', self)
-        clearAct.setShortcut('Ctrl+C')
-        clearAct.setStatusTip('Clear data point')
-        clearAct.triggered.connect(self.clear_data_points)
-
-        self.statusBar()
-
         menubar = self.menuBar()
-        fileMenu = menubar.addMenu('&Tool(s)')
-        fileMenu.addAction(clearAct)
+        toolMenu = menubar.addMenu('&Tool(s)')
+
+        # Clear
+        clearMenu = QtWidgets.QMenu('Clear', self)
+        # Clear data point
+        clearDataPointAct = QAction('Clear data point(s)', self)
+        clearMenu.addAction(clearDataPointAct)
+        clearDataPointAct.setShortcut('Ctrl+C')
+        clearDataPointAct.setStatusTip('Clear all the data points')
+        clearDataPointAct.triggered.connect(self.clear_data_points)
+        # Clear fitted line
+        clearFittedLineAct = QAction('Clear fitted line(s)', self)
+        clearMenu.addAction(clearFittedLineAct)
+        clearFittedLineAct.setShortcut('Ctrl+F')
+        clearFittedLineAct.setStatusTip('Clear all the fitted lines')
+        clearFittedLineAct.triggered.connect(self.clear_fitted_line)
+        # Clear All
+        clearAllAct = QAction('Clear All', self)
+        clearMenu.addAction(clearAllAct)
+        clearAllAct.setShortcut('Ctrl+A')
+        clearAllAct.setStatusTip('Clear all')
+        clearAllAct.triggered.connect(self.clear_all)
+
+
+        # self.statusBar()
+
+        toolMenu.addMenu(clearMenu)
+        
 
         # plot
         self.graphWidget = pg.PlotWidget()
@@ -168,39 +186,20 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
             self.y_temp = []    
         if return_stiff_bool:
             return self.m_LR
-    # def regression_all(self, model='LR', plot_bool=False):
-        # if len(self.x)!=0 and len(self.y)!=0:
-        #     X_train = np.array(self.x)
-        #     y_train = np.array(self.y)
-        #     zero_idx = np.where(X_train==0)
-        #     X_train = np.delete(X_train, zero_idx).reshape(-1, 1)
-        #     y_train = np.ravel(np.delete(y_train, zero_idx))
-        #     if len(X_train)!=0 and len(y_train)!=0:
-        #         X_test = np.linspace(np.min(X_train)/2,np.max(X_train),50).reshape(-1, 1)
-                
-        #         # linear log regression
-        #         if model == 'logLR':
-        #             LR_log_all = LinearRegression()
-        #             LR_log_all.fit(np.log(X_train), y_train)
-        #             y_pred = LR_log_all.predict(np.log(X_test))
-        #             if plot_bool:
-        #                 self.data_line_linear_log_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-                
-        #         # linear regression
-        #         if model == 'LR':
-        #             LR_all = LinearRegression()
-        #             LR_all.fit(X_train, y_train)
-        #             y_pred = LR_all.predict(X_test)
-        #             stiff = LR_all.coef_
-        #             if plot_bool:
-        #                 self.data_line_linear_reg_all.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
-        #             return stiff
-                
-        # return 0
-    
+   
     def clear_data_points(self):
         self.x = []
         self.y = []
         self.x_temp = []
         self.y_temp = []
         self.data_line.setData(self.x, self.y)
+
+    def clear_fitted_line(self):
+        self.data_line_linear_log_reg.setData([], [])  # Update the data.
+        self.data_line_linear_reg.setData([], [])  # Update the data.
+
+    def clear_all(self):
+        self.init_variables()
+        self.data_line_linear_log_reg.setData(self.x, self.y)  # Update the data.
+        self.data_line_linear_reg.setData(self.x, self.y)  # Update the data.
+        self.data_line.setData(self.x, self.y)  # Update the data.        
