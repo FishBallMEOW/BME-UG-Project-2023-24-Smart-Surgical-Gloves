@@ -210,6 +210,7 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
                     y_pred = self.m*np.log(X_test)+b
                     if plot_bool:
                             self.data_line_linear_log_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+                    self.m = self.m/np.min(X_train)  # derivative of the equation to find the initial slope 
 
                 # Exponential 
                 if self.model == 'exp':
@@ -217,6 +218,7 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
                     y_pred = np.exp(self.m*X_test+b)
                     if plot_bool:
                             self.data_line_linear_exp_reg.setData(X_test.reshape(-1,).tolist(), y_pred.reshape(-1,).tolist())  # Update the data.
+                    self.m = self.m*np.exp(self.m*np.min(X_train)+b)
 
         # clear cache 
         if clear_bool:

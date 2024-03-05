@@ -25,6 +25,8 @@ import ControlBox
 
 root_path = os.path.dirname(__file__)
 data_file = 'data/20_feb_2024/data_20_feb_2024/data_0030_same_pos.csv'  # change to desire data (.csv) file name
+stiff_csv = os.path.join(root_path, data_file[:-4]+'_stiffness.csv')
+print(stiff_csv)
 # hand obj
 hand_obj = Wavefront(os.path.join(root_path, 'Object/hand/right_hand.obj'))
 hand_red_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_red.obj'))
@@ -233,6 +235,12 @@ def update(dt):
         Stress_strain_w.regression_each_press(False, False, False) 
         Stiff_LR = Stress_strain_w.regression_each_press(True)
         Stress_strain_w.set_title(f"Stiffness(each press): {round(Stiff_LR, 2)}")
+        # write stiffness to csv
+        with open(stiff_csv, 'a', newline='') as csvfile:
+            fieldnames = ['stiffness']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writerow({'stiffness':Stiff_LR})
+        csvfile.close
         trigger = False
 
     # updating data if trigger is started and not yet stopped
@@ -258,6 +266,13 @@ window = pyglet.window.Window(viewport_width, viewport_height, "3D Graphics Simu
 window.set_minimum_size(600, 500)
 window.set_location(0, 35)
 
+# initialize csvwriter
+with open(stiff_csv, 'w', newline='') as csvfile:
+    fieldnames = ['stiffness']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+csvfile.close
+
 # Initialize the widget for the plot of pressure
 app = QtWidgets.QApplication(sys.argv)
 Pressure_w = RealTimePlotter.MainWindow()
@@ -269,6 +284,8 @@ Stress_strain_w.show()
 
 # Pop-up ControlBox
 controlBox = ControlBox.MainWindow()
+
+
 #---------------------------------Loop----------------------------------------------------------------------------------------------------------
 @window.event  # on the event of creating/ drawing the window
 def on_draw():  

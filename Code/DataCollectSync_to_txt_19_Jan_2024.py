@@ -258,6 +258,7 @@ tracker.start_tracking()
 window = pyglet.window.Window(viewport_width, viewport_height, "Surgical Gloves", resizable=True)
 window.set_minimum_size(600, 500)
 window.set_location(0, 35)
+
 # initialize csvwriter
 with open(csvfileName, 'w', newline='') as csvfile:
     fieldnames = ['timestamps', 'qw1', 'qx1', 'qy1', 'qz1', 'x1', 'y1', 'z1', 'qw2', 'qx2', 'qy2', 'qz2', 'x2', 'y2', 'z2', 'pressure']
