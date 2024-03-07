@@ -194,6 +194,9 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
             zero_idx = np.where(X_train==0)
             X_train = np.delete(X_train, zero_idx)
             y_train = np.ravel(np.delete(y_train, zero_idx))
+            # Remove NaN values
+            X_train = X_train[~np.isnan(X_train)]
+            y_train = y_train[~np.isnan(X_train)]
             if len(X_train)!=0 and len(y_train)!=0:
                 X_test = np.linspace(np.min(X_train)/2,np.max(X_train),50)
                 
@@ -214,6 +217,7 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
 
                 # Exponential 
                 if self.model == 'exp':
+                    print(X_train, np.log(y_train), y_train)
                     self.m, b = np.polyfit(X_train, np.log(y_train), 1)
                     y_pred = np.exp(self.m*X_test+b)
                     if plot_bool:

@@ -24,7 +24,7 @@ from Utils import ControlBox
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
 
 root_path = os.path.dirname(__file__)
-data_file = 'data/20_feb_2024/data_20_feb_2024/data_0030_same_pos.csv'  # change to desire data (.csv) file name
+data_file = 'data/20_feb_2024/data_20_feb_2024/data_0050_same_pos.csv'  # change to desire data (.csv) file name
 stress_strain_csv = os.path.join(root_path, data_file[:-4]+'_stress_strain.csv')
 # hand obj
 hand_obj = Wavefront(os.path.join(root_path, 'Object/hand/right_hand.obj'))
