@@ -1,5 +1,5 @@
 # BME-UG-Project-2023-24-Smart-Surgical-Gloves
-## UCL Biomedical Engineering Year 3 Individual Project: A Real-time 3D GUI for “Smart Surgical Gloves” with location and pressure sensors
+## UCL Biomedical Engineering Year 3 Individual Project: A Real-time 3D GUI tool for “Smart Surgical Gloves” with location and pressure sensors
 
 ### Overview & Current Status:
 "Smart Surgical Gloves” is a wearable device that integrates both the location and pressure sensors to record information from reality and input into the digital system. This idea of constructing a sensorized
