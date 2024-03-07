@@ -19,7 +19,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # setting the axis label
         self.graphWidget.setLabel(
             "left",
-            '<span style="color: black; font-size: 18px">Pressure</span>'
+            '<span style="color: black; font-size: 18px">Stress (kPa)</span>'
         )
         self.graphWidget.setLabel(
             "bottom",
@@ -123,7 +123,7 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
 
     def init_variables(self):
         # initialize list
-        self.model = 'LR'
+        self.model = 'exp'
         self.x = []  
         self.y = []  
         self.x_temp = []
@@ -140,7 +140,7 @@ class MainWindow_wo_x_lim(QtWidgets.QMainWindow):
         self.graphWidget.setBackground('w')  # Background color
         self.graphWidget.addLegend()  # legend
         # setting the axis label
-        self.graphWidget.setLabel("left", '<span style="color: black; font-size: 18px">Stress</span>')
+        self.graphWidget.setLabel("left", '<span style="color: black; font-size: 18px">Stress (kPa)</span>')
         self.graphWidget.setLabel("bottom", '<span style="color: black; font-size: 18px">Strain</span>')
         
         # Data points

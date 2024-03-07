@@ -25,20 +25,21 @@ import ControlBox
 
 root_path = os.path.dirname(__file__)
 data_file = 'data/20_feb_2024/data_20_feb_2024/data_0030_same_pos.csv'  # change to desire data (.csv) file name
-stiff_csv = os.path.join(root_path, data_file[:-4]+'_stiffness.csv')
-print(stiff_csv)
+stress_strain_csv = os.path.join(root_path, data_file[:-4]+'_stress_strain.csv')
 # hand obj
 hand_obj = Wavefront(os.path.join(root_path, 'Object/hand/right_hand.obj'))
-hand_red_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_red.obj'))
-hand_orange_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_orange.obj'))
-hand_yellow_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_yellow.obj'))
-hand_green_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_green.obj'))
+# hand_red_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_red.obj'))
+# hand_orange_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_orange.obj'))
+# hand_yellow_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_yellow.obj'))
+# hand_green_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_green.obj'))
+
 # prostate obj
 prostate_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic.obj'))
 # prostate_red_RT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RT_red.obj'))
 # prostate_red_RB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RB_red.obj'))
 # prostate_red_LT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LT_red.obj'))
 # prostate_red_LB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LB_red.obj'))
+
 # prostate obj more cut 
 prostate_red_1_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_1.obj'))
 prostate_red_2_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_2.obj'))
@@ -52,6 +53,7 @@ prostate_red_9_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut
 prostate_red_10_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_10.obj'))
 prostate_red_11_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_11.obj'))
 prostate_red_12_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_12.obj'))
+
 # plane obj
 plane_obj = Wavefront(os.path.join(root_path, 'Object/hand/plane.obj'))
 # dataframe
@@ -205,7 +207,8 @@ def update(dt):
     dataPressure = t_readPressure.join()
 
     t += 1
-    pressure = dataPressure[0][0]
+    area = math.pi* (9.53*(10**-3)/2)**2
+    pressure = (dataPressure[0][0]/area)/1000
 
     [qw1, rot_z1, rot_x1, rot_y1, z1, x1, y1] = dataLocation[0][0]  # aurora (x,y,z) --> opengl (z, x, y)
     [qw2, rot_z2, rot_x2, rot_y2, z2, x2, y2] = dataLocation[1][0]
@@ -226,7 +229,7 @@ def update(dt):
     pressure_diff = Pressure_w.pressure_diff()
 
     # start the sampling for the stress-strain plot
-    if pressure_moving_ave >= 0.5 and pressure_moving_ave <= 10 and not trigger:  # threshold: 0.5; remove abnormal pressure > 10
+    if pressure_moving_ave >= 2 and pressure_moving_ave <= 30 and not trigger:  # threshold: 2; remove abnormal pressure > 30
         x_i, y_i, z_i = x2, y2, z2
         trigger = True
 
@@ -235,18 +238,19 @@ def update(dt):
         Stress_strain_w.regression_each_press(False, False, False) 
         Stiff_LR = Stress_strain_w.regression_each_press(True)
         Stress_strain_w.set_title(f"Stiffness(each press): {round(Stiff_LR, 2)}")
-        # write stiffness to csv
-        with open(stiff_csv, 'a', newline='') as csvfile:
-            fieldnames = ['stiffness']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writerow({'stiffness':Stiff_LR})
-        csvfile.close
         trigger = False
 
     # updating data if trigger is started and not yet stopped
-    strain = distance_ori(x_i, y_i, z_i, x2, y2, z2)/1000
+    L_0 = 25  # formula to calculate strain = deformation (L)/ original length (L_0), Here for the phantom, it is assumed to be the radius (25mm)
+    strain = (distance_ori(x_i, y_i, z_i, x2, y2, z2)/L_0)  # L_0 in mm and distance_ori(x_i, y_i, z_i, x2, y2, z2) also in mm
     if trigger: 
         Stress_strain_w.update_plot_data(strain, pressure_moving_ave)
+        # write stress and strain to csv
+        with open(stress_strain_csv, 'a', newline='') as csvfile:
+            fieldnames = ['Stress', 'Strain']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writerow({'Stress':pressure_moving_ave, 'Strain':strain})
+        csvfile.close
 
     # aurora to opengl coordinates
     [x1, y1, z1] = aurora2opengl(x1, y1, z1)
@@ -267,8 +271,8 @@ window.set_minimum_size(600, 500)
 window.set_location(0, 35)
 
 # initialize csvwriter
-with open(stiff_csv, 'w', newline='') as csvfile:
-    fieldnames = ['stiffness']
+with open(stress_strain_csv, 'w', newline='') as csvfile:
+    fieldnames = ['Stress', 'Strain']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
 csvfile.close
