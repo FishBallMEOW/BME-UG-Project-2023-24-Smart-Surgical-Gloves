@@ -207,7 +207,7 @@ def update(dt):
     dataPressure = t_readPressure.join()
 
     t += 1
-    area = math.pi* (9.53*(10**-3)/2)**2
+    area = math.pi* (9.53*(10**-3)/2)**2  # area of the flexiforce sensor
     pressure = (dataPressure[0][0]/area)/1000
 
     [qw1, rot_z1, rot_x1, rot_y1, z1, x1, y1] = dataLocation[0][0]  # aurora (x,y,z) --> opengl (z, x, y)

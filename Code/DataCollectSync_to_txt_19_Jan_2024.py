@@ -22,21 +22,24 @@ from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.svm import SVR
 from sklearn import metrics
 import RealTimePlotter
+import ControlBox
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
 
 root_path = os.path.dirname(__file__)
 # hand obj
 hand_obj = Wavefront(os.path.join(root_path, 'Object/hand/right_hand.obj'))
-hand_red_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_red.obj'))
-hand_orange_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_orange.obj'))
-hand_yellow_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_yellow.obj'))
-hand_green_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_green.obj'))
+# hand_red_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_red.obj'))
+# hand_orange_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_orange.obj'))
+# hand_yellow_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_yellow.obj'))
+# hand_green_obj = Wavefront(os.path.join(root_path, 'Object/hand/hand_green.obj'))
+
 # prostate obj
 prostate_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic.obj'))
 # prostate_red_RT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RT_red.obj'))
 # prostate_red_RB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_RB_red.obj'))
 # prostate_red_LT_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LT_red.obj'))
 # prostate_red_LB_obj = Wavefront(os.path.join(root_path, 'Object/prostate/prostate_realistic_cut_LB_red.obj'))
+
 # prostate obj more cut 
 prostate_red_1_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_1.obj'))
 prostate_red_2_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_2.obj'))
@@ -50,6 +53,7 @@ prostate_red_9_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut
 prostate_red_10_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_10.obj'))
 prostate_red_11_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_11.obj'))
 prostate_red_12_obj = Wavefront(os.path.join(root_path, 'Object/prostate/More Cut/prostate_realistic_more_cut_12.obj'))
+
 # plane obj
 plane_obj = Wavefront(os.path.join(root_path, 'Object/hand/plane.obj'))
 
@@ -92,13 +96,11 @@ strain = 0.0
 strain_diff = 0.0
 moving_ave_temp = []
 time_pressure = []
-x_offset = 0
-y_offset = -3
-z_offset = -8 
 csvfileName = 'data_20_feb_2024\data_0010_same_pos1.csv'  # change it to the desired file (.csv) location
 zoom = 2
 rot_cam = (0, 0)
 cam_pos = (0, 0, 0)
+close_bool = False
 
 #---------------------------------Functions&Classes-----------------------------------------------------------------------------------------------
 class ThreadWithReturnValue(Thread):
@@ -197,6 +199,7 @@ def update(dt):
     dataLocation = t_readLocation.join()
     dataPressure = t_readPressure.join()
 
+    
     pressure = dataPressure[0][0]
 
     [z1, x1, y1] = dataLocation[0][0][0][0][4:7]
@@ -217,6 +220,9 @@ def update(dt):
         writer.writerow({'timestamps':dataPressure[0][1], 'pressure':dataPressure[0][0]})
     csvfile.close
 
+    area = math.pi* (9.53*(10**-3)/2)**2  # area of the flexiforce sensor
+    pressure = (pressure/area)/1000
+
     # moving average 
     if len(moving_ave_temp) <= 10:
         moving_ave_temp.append(pressure)
@@ -230,19 +236,20 @@ def update(dt):
     pressure_diff = Pressure_w.pressure_diff()
 
     # start the sampling for the stress-strain plot
-    if pressure_moving_ave >= 0.5 and pressure_moving_ave <= 10 and not trigger:  # threshold: 0.5; remove abnormal pressure > 10
+    if pressure_moving_ave >= 2 and pressure_moving_ave <= 30 and not trigger:  # threshold: 2; remove abnormal pressure > 30
         x_i, y_i, z_i = x2, y2, z2
         trigger = True
 
     if pressure_diff <= 0 and trigger:  # limit weird data point with pressure_diff > 5
         x_i, y_i, z_i = 0.0, 0.0, 0.0
-        Stress_strain_w.regression_each_press('logLR', False, False, False) 
-        Stiff_LR = Stress_strain_w.regression_each_press('LR', True)
+        Stress_strain_w.regression_each_press(False, False, False) 
+        Stiff_LR = Stress_strain_w.regression_each_press(True)
         Stress_strain_w.set_title(f"Stiffness(each press): {round(Stiff_LR, 2)}")
         trigger = False
 
     # updating data if trigger is started and not yet stopped
-    strain = distance_ori(x_i, y_i, z_i, x2, y2, z2)/1000
+    L_0 = 25  # formula to calculate strain = deformation (L)/ original length (L_0), Here for the phantom, it is assumed to be the radius (25mm)
+    strain = (distance_ori(x_i, y_i, z_i, x2, y2, z2)/L_0)  # L_0 in mm and distance_ori(x_i, y_i, z_i, x2, y2, z2) also in mm
     if trigger: 
         Stress_strain_w.update_plot_data(strain, pressure_moving_ave)
 
@@ -250,12 +257,18 @@ def update(dt):
     [x1, y1, z1] = aurora2opengl(x1, y1, z1)
     [x2, y2, z2] = aurora2opengl(x2, y2, z2)
 
+    close_bool = controlBox.return_close_bool()
+    if close_bool:
+        window.close()
+        Pressure_w.close()
+        Stress_strain_w.close()
+
 #---------------------------------Initialization------------------------------------------------------------------------------------------------
 #Initialize aurora
 tracker.start_tracking()
 
 # Creating a window
-window = pyglet.window.Window(viewport_width, viewport_height, "Surgical Gloves", resizable=True)
+window = pyglet.window.Window(viewport_width, viewport_height, "3D Graphics Simulation", resizable=True)
 window.set_minimum_size(600, 500)
 window.set_location(0, 35)
 
@@ -274,6 +287,10 @@ Pressure_w.show()
 Stress_strain_w = RealTimePlotter.MainWindow_wo_x_lim()
 Stress_strain_w.set_title("Stress-Strain Graph")
 Stress_strain_w.show()
+
+# Pop-up ControlBox
+controlBox = ControlBox.MainWindow()
+
 
 #---------------------------------Loop----------------------------------------------------------------------------------------------------------
 @window.event  # on the event of creating/ drawing the window
@@ -418,7 +435,7 @@ def on_key_press(symbol, modifiers):
         x -= 1*math.cos(math.radians(-int(rot_x)))
     elif symbol == key.SPACE or symbol == key.UP:
         y -= 1
-    elif symbol == key.DOWN:
+    elif symbol == key.LSHIFT or symbol == key.DOWN:
         y += 1
     cam_pos = (x,y,z)
     pass
