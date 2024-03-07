@@ -21,8 +21,8 @@ import numpy.polynomial.polynomial as poly
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.svm import SVR
 from sklearn import metrics
-import RealTimePlotter
-import ControlBox
+import Utils.RealTimePlotter
+import Utils.ControlBox
 #---------------------------------Import---------------------------------------------------------------------------------------------------------
 
 root_path = os.path.dirname(__file__)
